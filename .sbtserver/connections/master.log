@@ -1,0 +1,49 @@
+New log file opened at Wed Apr 26 23:10:38 IST 2017 by 30736@Babage-Machine
+Taking next connection to: 37645
+New client attempting to connect on port: 47188-37645
+  Address = /127.0.1.1:37645
+This client on port 47188 has uuid 7ac2d9a6-ff69-441f-980f-091acc74e1bf configName play-fork-run humanReadableName Play Fork Run protocolVersion 1 featureTags Vector()
+Connected Clients: play-fork-run-7ac2d9a6-ff69-441f-980f-091acc74e1bf
+Taking next connection to: 37645
+New client attempting to connect on port: 47190-37645
+  Address = /127.0.1.1:37645
+Handshake exception on socket: 47190
+sbt.impl.ipc.HandshakeException: Unable to perform handshake
+	at sbt.impl.ipc.Peer.handshake(IPC.scala:46)
+	at sbt.impl.ipc.MultiClientServer.<init>(IPC.scala:150)
+	at sbt.server.SbtServerSocketHandler$$anon$1.run(SbtServerSocketHandler.scala:43)
+Caused by: java.io.EOFException
+	at java.io.DataInputStream.readInt(DataInputStream.java:392)
+	at sbt.impl.ipc.Peer.receive(IPC.scala:95)
+	at sbt.impl.ipc.Peer.handshake(IPC.scala:49)
+	... 2 more
+Taking next connection to: 37645
+New client attempting to connect on port: 47192-37645
+  Address = /127.0.1.1:37645
+This client on port 47192 has uuid 736a07c7-bcae-4818-be86-b9fe6ff7d52c configName activator humanReadableName Activator protocolVersion unknown featureTags Vector()
+Connected Clients: play-fork-run-7ac2d9a6-ff69-441f-980f-091acc74e1bf, activator-736a07c7-bcae-4818-be86-b9fe6ff7d52c
+Taking next connection to: 37645
+Checking to see if clients are empty...
+We have 2 non-daemon clients, continuing serving connections.
+Taking next connection to: 37645
+Checking to see if clients are empty...
+We have 2 non-daemon clients, continuing serving connections.
+Taking next connection to: 37645
+Checking to see if clients are empty...
+We have 2 non-daemon clients, continuing serving connections.
+Taking next connection to: 37645
+Checking to see if clients are empty...
+We have 2 non-daemon clients, continuing serving connections.
+Taking next connection to: 37645
+Checking to see if clients are empty...
+We have 2 non-daemon clients, continuing serving connections.
+Taking next connection to: 37645
+Checking to see if clients are empty...
+We have 2 non-daemon clients, continuing serving connections.
+Taking next connection to: 37645
+Checking to see if clients are empty...
+We have 2 non-daemon clients, continuing serving connections.
+Taking next connection to: 37645
+Checking to see if clients are empty...
+We have 2 non-daemon clients, continuing serving connections.
+Taking next connection to: 37645
