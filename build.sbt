@@ -9,7 +9,6 @@ scalaVersion := "2.11.7"
 // https://mvnrepository.com/artifact/org.scalanlp/breeze_2.11
 libraryDependencies += "org.scalanlp" % "breeze_2.11" % "0.12"
 
-
 libraryDependencies ++= Seq(
   jdbc,
   cache,

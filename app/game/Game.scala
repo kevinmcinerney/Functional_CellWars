@@ -7,6 +7,6 @@ import breeze.math.CoordinateField
   */
 
 object Game {
-  
+
 
 }

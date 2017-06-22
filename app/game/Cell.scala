@@ -1,5 +1,7 @@
 package game
 
+import breeze.linalg.{max, min}
+
 
 /**
   * Created by kevin on 29/04/17.
@@ -36,8 +38,8 @@ case class Cell(topLeft: Coordinate, botRight: Coordinate) {
 
   def innerCells: List[Coordinate] = {
     for {
-      x <- topLeft.x + 1 to botRight.x - 1
-      y <- topLeft.y + 1 to botRight.y - 1
+      x <- topLeft.x + 1 until botRight.x
+      y <- topLeft.y + 1 until botRight.y
     } yield Coordinate(x, y)
   }.toList
 
@@ -51,5 +53,21 @@ case class Cell(topLeft: Coordinate, botRight: Coordinate) {
   def contains(other: Cell): Boolean =
     outerCells.exists(point => other.innerCells.contains(point))
 
+  def merge(other: Cell): Option[Cell] = {
+    if(this contains other){
+      val topLeftX = min(topLeft.x, other.topLeft.x)
+      val topLeftY = min(topLeft.y, other.topLeft.y)
+      val botRightX = max(botRight.x, other.botRight.x)
+      val botRightY = max(botRight.y, other.botRight.y)
+      Some(
+        Cell(
+          Coordinate(topLeftX, topLeftY),
+          Coordinate(botRightX, botRightY)
+        )
+      )
+    } else None
+  }
+
+  override def toString: String = " ("+ topLeft.x + "," + topLeft.y + ")-(" + botRight.x + "," + botRight.y + ") "
 
 }

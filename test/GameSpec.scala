@@ -1,7 +1,5 @@
 import org.scalatestplus.play.PlaySpec
-import game.Board
-import game.Cell
-import game.Coordinate
+import game.{Board, Cell, Coordinate, Team}
 
 
 /**
@@ -14,6 +12,7 @@ class GameSpec extends PlaySpec {
   val cell2 = Cell(Coordinate(17,17),Coordinate(19,19))
   val cell3 = Cell(Coordinate(7,7), Coordinate(10,10))
   val cell4 = Cell(Coordinate(3,3), Coordinate(6,6))
+  val cell5  = Cell(Coordinate(2,2), Coordinate(5,5))
 
 
   "allowable board values " should {
@@ -116,6 +115,34 @@ class GameSpec extends PlaySpec {
     }
     "(3,4)-(6,7) reversed" in {
      Cell(Coordinate(3, 4), Coordinate(6, 7)) contains  Cell(Coordinate(3, 3), Coordinate(6, 6)) mustBe true
+    }
+  }
+
+  "merging" should {
+    "(0,0)-(3,3) merge (3,3)-(6,6) is None" in {
+      Cell(Coordinate(0, 0), Coordinate(3, 3))  merge
+        Cell(Coordinate(3, 3), Coordinate(6, 6)) equals None mustBe true }
+    "(0,0)-(3,3) merge (2,2)-(5,5) is (0,0)-(5,5)" in {
+      Cell(Coordinate(0, 0), Coordinate(3, 3)) merge
+        Cell(Coordinate(2, 2), Coordinate(5, 5)) mustEqual
+        Some(Cell(Coordinate(0, 0), Coordinate(5, 5)))  }
+    "(0,0)-(3,3) merge (2,0)-(5,3) is (0,0)-(5,3)" in {
+      Cell(Coordinate(0, 0), Coordinate(3, 3)) merge
+        Cell(Coordinate(2, 0), Coordinate(5, 3)) mustEqual
+        Some(Cell(Coordinate(0, 0), Coordinate(5, 3)))  }
+    "(0,0)-(3,3) merge (2,2)-(5,5) merge (4,0)-(7,5) is (0,0)-(7,5)" in {
+      (Cell(Coordinate(0, 0), Coordinate(3, 3)) merge
+        Cell(Coordinate(2, 2), Coordinate(5, 5))).get merge
+        Cell(Coordinate(4, 0), Coordinate(7, 3)) mustEqual
+        Some(Cell(Coordinate(0, 0), Coordinate(7, 5)))
+    }
+  }
+  val team = new Team(List(cell1,cell2,cell3,cell4,cell5))
+  val merged = cell4 merge cell5
+
+  "merging teams" should {
+    "should give correct new team" in {
+     team.merge(team) mustEqual  (merged.get :: List(cell1,cell2,cell3))
     }
   }
 
