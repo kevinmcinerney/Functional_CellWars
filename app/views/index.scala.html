@@ -1,20 +1,71 @@
 @*
- * This template takes a single argument, a String containing a
- * message to display.
- *@
-@(message: String)
+* This template is called from the `index` template. This template
+* handles the rendering of the page header and body tags. It takes
+* two arguments, a `String` for the title of the page and an `Html`
+* object to insert into the body of the page.
+*@
+@(title: String)
 
-@*
- * Call the `main` template with two arguments. The first
- * argument is a `String` with the title of the page, the second
- * argument is an `Html` object containing the body of the page.
- *@
-@main("Welcome to Play") {
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+ <meta name="description" content="">
+ <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+ <meta name="generator" content="Jekyll v3.8.5">
+ <title>Cover Template · Bootstrap</title>
 
-    @*
-     * Get an `Html` object by calling the built-in Play welcome
-     * template and passing a `String` message.
-     *@
-    @play20.welcome(message, style = "Scala")
+ <!-- Bootstrap core CSS -->
+ <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
-}
+ <!-- Custom CSS -->
+ <link rel="stylesheet" media="screen" href='@routes.Assets.versioned("stylesheets/cover.css")' />
+
+ <!-- D3 -->
+ <script src='https://d3js.org/d3.v4.min.js'></script>
+
+ <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+      }
+
+      @@media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+</head>
+<body class="text-center">
+<div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+ <header class="masthead mb-auto">
+  <div class="inner">
+   <h3 class="masthead-brand">@title</h3>
+   <nav class="nav nav-masthead justify-content-center">
+    <a class="nav-link active" href="#">Home</a>
+    <a class="nav-link" href="#">Research</a>
+    <a class="nav-link" href="#">Contact</a>
+   </nav>
+  </div>
+ </header>
+
+ <main role="main" class="inner cover">
+
+  <div id="grid"> </div>
+
+  <script type="text/javascript" src="@routes.Assets.versioned("javascripts/grid.js")"></script>
+
+ </main>
+
+ <footer class="mastfoot mt-auto">
+  <div class="inner">
+   <p>Cover template for <a href="https://getbootstrap.com/">Bootstrap</a>, by <a href="https://twitter.com/mdo">@@mdo</a>.</p>
+  </div>
+ </footer>
+</div>
+</body>
+</html>
+
+

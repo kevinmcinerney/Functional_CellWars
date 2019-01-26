@@ -7,12 +7,12 @@ import game.{Board, Cell, Coordinate, Team}
   */
 class GameSpec extends PlaySpec {
 
-  val board = new Board(20)
+  val board = Board(20)
   val cell1 = Cell(Coordinate(0,0),Coordinate(2,2))
   val cell2 = Cell(Coordinate(17,17),Coordinate(19,19))
   val cell3 = Cell(Coordinate(7,7), Coordinate(10,10))
   val cell4 = Cell(Coordinate(3,3), Coordinate(6,6))
-  val cell5  = Cell(Coordinate(2,2), Coordinate(5,5))
+  val cell5 = Cell(Coordinate(2,2), Coordinate(5,5))
 
 
   "allowable board values " should {
@@ -143,6 +143,15 @@ class GameSpec extends PlaySpec {
   "merging teams" should {
     "should give correct new team" in {
      team.merge(team) mustEqual  (merged.get :: List(cell1,cell2,cell3))
+    }
+  }
+
+  val cell6 = Cell(Coordinate(0,5), Coordinate(3,8))
+  val team2 = new Team(List(cell1,cell2,cell3,cell4,cell5,cell6))
+  val merged2 = (cell4 merge cell5).get merge cell6
+  "recursively merging teams" should {
+    "should give correct new team" in {
+      team2.recMerge(team2).getCells mustEqual  new Team(merged2.get :: List(cell1,cell2,cell3)).getCells
     }
   }
 

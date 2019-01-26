@@ -3,7 +3,7 @@ package game
 /**
   * Created by kevin on 30/04/17.
   */
-class Team(cells: List[Cell]) {
+case class Team(cells: List[Cell]) {
 
   def size = cells.size
 
@@ -13,7 +13,7 @@ class Team(cells: List[Cell]) {
   }
 
   def recMerge(team: Team): Team = {
-    if (mergedNeeded(team)) recMerge(team)
+    if (mergedNeeded(team)) recMerge(new Team(this.merge(team)))
     else team
   }
 
