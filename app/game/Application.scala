@@ -13,10 +13,16 @@ object Application extends App{
 
   val teamTwo = myGame.loadTeam(myGame.board.dimensions - 4, numPerTeam)
 
+
+
   println("Board " + myGame.board.dimensions)
 
   println("TeamOne " + teamOne)
 
   println("TeamTwo " + teamTwo)
+
+  println("JSON Board " + myGame.board.boardToJSON())
+
+
 
 }

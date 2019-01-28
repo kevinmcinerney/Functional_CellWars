@@ -1,4 +1,6 @@
 package game
+
+
 import com.google.gson.Gson
 
 /**
@@ -6,17 +8,15 @@ import com.google.gson.Gson
   */
 trait BoardTrait {
 
-  var board: Array[Array[Int]]
-
   def onBoard(i: Int): Boolean
 
   def isValidMove(cell: Cell): Boolean
 
 }
 
-case class Board(dimensions: Int) extends BoardTrait {
+case class Grid(height: Int, width: Int, team: Int, x: Int, y: Int)
 
-  override var board = Array.ofDim[Int](dimensions,dimensions)
+case class Board(dimensions: Int) extends BoardTrait {
 
   def onBoard(i: Int): Boolean = i >= 0 && i < dimensions
 
@@ -26,10 +26,26 @@ case class Board(dimensions: Int) extends BoardTrait {
   }
 
   def boardToJSON(): String = {
-    // Read in teams
-    // Make Array of Board
-    // JSONify for UI
-    ???
+
+    // Constructor here for two teams
+    val board: Array[Array[Grid]] = makeBoard()
+    val gson = new Gson
+    val jsonString = gson.toJson(board)
+    jsonString
+  }
+
+  private def makeBoard(): Array[Array[Grid]] = {
+
+    val board = Array.ofDim[Grid](dimensions, dimensions)
+    val length = 600 / dimensions
+    for (x <- 0 until 600 by length) {
+      for ( y <- 0 until 600 by length) {
+        board(x/length)(y/length) = Grid(length,length, 1, x, y)
+      }
+    }
+
+    board
+
   }
 
 }
