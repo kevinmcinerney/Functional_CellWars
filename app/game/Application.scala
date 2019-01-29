@@ -1,27 +1,38 @@
 package game
+import controllers.GameController
 
 /**
   * Created by kevin on 26/01/19.
   */
 object Application extends App{
 
-  val myGame = new Game(20)
+  //val board = new GameController().startPositions
 
-  val numPerTeam = myGame.board.dimensions / 4
+//  val board = new Board(50)
+//
+//
+//  println("Board " + board.dim)
+//
+//  println("TeamOne " + board.teamOne)
+//
+//  println("TeamTwo " + board.teamTwo)
+//
+//  println("JSON Board " + board.boardToJSON())
+//
+//  board.teamOne = board.teamOne.down(board.teamOne, Coordinate(1,1))
+//
+//  println("Board " + board.dim)
+//
+//  println("TeamOne " + board.teamOne)
+//
+//  println("TeamTwo " + board.teamTwo)
+//
+//  println("JSON Board " + board.boardToJSON())
 
-  val teamOne = myGame.loadTeam(0, numPerTeam)
-
-  val teamTwo = myGame.loadTeam(myGame.board.dimensions - 4, numPerTeam)
-
-
-
-  println("Board " + myGame.board.dimensions)
-
-  println("TeamOne " + teamOne)
-
-  println("TeamTwo " + teamTwo)
-
-  println("JSON Board " + myGame.board.boardToJSON())
+//  while(true){
+//
+//
+//  }
 
 
 

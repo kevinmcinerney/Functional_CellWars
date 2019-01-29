@@ -1,70 +1,85 @@
-function gridData() {
-	var data = new Array();
-	var xpos = 1; //starting xpos and ypos at 1 so the stroke will show when we make the grid below
-	var ypos = 1;
-	var length = 30;
-	var team = 0;
+//function move(json,x,y,move){
+//
+//      $.ajax({
+//        type: "GET",                                                        // GET or POST
+//        url: 'http://localhost:9000/move/'+json+'/'+x+'/'+y+'/'+move        // Path to file
+//        timeout: 2000,                                                      // Waiting time
+//        success: function(json) {                                           // Show content
+//          build(data)
+//        },
+//      });
+//};
 
-	// iterate for rows
-	for (var row = 0; row < 20; row++) {
-		data.push( new Array() );
+function build(json){
 
-		// iterate for cells/columns inside rows
-		for (var column = 0; column < 20; column++) {
-			data[row].push({
-				x: xpos,
-				y: ypos,
-				width: length,
-				height: length,
-				team: team
-			})
-			// increment the x position. I.e. move it over by 50 (width variable)
-			xpos += length;
-		}
-		// reset the x position after a row is complete
-		xpos = 1;
-		// increment the y position for the next row. Move it down 50 (height variable)
-		ypos += length;
-	}
-	return data;
-}
+ gridData = json;
 
-var gridData = [[{"height":30,"width":30,"team":2,"x":0,"y":0},{"height":30,"width":30,"team":1,"x":0,"y":30},{"height":30,"width":30,"team":2,"x":0,"y":60},{"height":30,"width":30,"team":0,"x":0,"y":90},{"height":30,"width":30,"team":0,"x":0,"y":120},{"height":30,"width":30,"team":0,"x":0,"y":150},{"height":30,"width":30,"team":0,"x":0,"y":180},{"height":30,"width":30,"team":0,"x":0,"y":210},{"height":30,"width":30,"team":0,"x":0,"y":240},{"height":30,"width":30,"team":0,"x":0,"y":270},{"height":30,"width":30,"team":0,"x":0,"y":300},{"height":30,"width":30,"team":0,"x":0,"y":330},{"height":30,"width":30,"team":0,"x":0,"y":360},{"height":30,"width":30,"team":0,"x":0,"y":390},{"height":30,"width":30,"team":0,"x":0,"y":420},{"height":30,"width":30,"team":0,"x":0,"y":450},{"height":30,"width":30,"team":0,"x":0,"y":480},{"height":30,"width":30,"team":0,"x":0,"y":510},{"height":30,"width":30,"team":0,"x":0,"y":540},{"height":30,"width":30,"team":0,"x":0,"y":570}],[{"height":30,"width":30,"team":0,"x":30,"y":0},{"height":30,"width":30,"team":0,"x":30,"y":30},{"height":30,"width":30,"team":0,"x":30,"y":60},{"height":30,"width":30,"team":0,"x":30,"y":90},{"height":30,"width":30,"team":0,"x":30,"y":120},{"height":30,"width":30,"team":0,"x":30,"y":150},{"height":30,"width":30,"team":0,"x":30,"y":180},{"height":30,"width":30,"team":0,"x":30,"y":210},{"height":30,"width":30,"team":0,"x":30,"y":240},{"height":30,"width":30,"team":0,"x":30,"y":270},{"height":30,"width":30,"team":0,"x":30,"y":300},{"height":30,"width":30,"team":0,"x":30,"y":330},{"height":30,"width":30,"team":0,"x":30,"y":360},{"height":30,"width":30,"team":0,"x":30,"y":390},{"height":30,"width":30,"team":0,"x":30,"y":420},{"height":30,"width":30,"team":0,"x":30,"y":450},{"height":30,"width":30,"team":0,"x":30,"y":480},{"height":30,"width":30,"team":0,"x":30,"y":510},{"height":30,"width":30,"team":0,"x":30,"y":540},{"height":30,"width":30,"team":0,"x":30,"y":570}],[{"height":30,"width":30,"team":0,"x":60,"y":0},{"height":30,"width":30,"team":0,"x":60,"y":30},{"height":30,"width":30,"team":0,"x":60,"y":60},{"height":30,"width":30,"team":0,"x":60,"y":90},{"height":30,"width":30,"team":0,"x":60,"y":120},{"height":30,"width":30,"team":0,"x":60,"y":150},{"height":30,"width":30,"team":0,"x":60,"y":180},{"height":30,"width":30,"team":0,"x":60,"y":210},{"height":30,"width":30,"team":0,"x":60,"y":240},{"height":30,"width":30,"team":0,"x":60,"y":270},{"height":30,"width":30,"team":0,"x":60,"y":300},{"height":30,"width":30,"team":0,"x":60,"y":330},{"height":30,"width":30,"team":0,"x":60,"y":360},{"height":30,"width":30,"team":0,"x":60,"y":390},{"height":30,"width":30,"team":0,"x":60,"y":420},{"height":30,"width":30,"team":0,"x":60,"y":450},{"height":30,"width":30,"team":0,"x":60,"y":480},{"height":30,"width":30,"team":0,"x":60,"y":510},{"height":30,"width":30,"team":0,"x":60,"y":540},{"height":30,"width":30,"team":0,"x":60,"y":570}],[{"height":30,"width":30,"team":0,"x":90,"y":0},{"height":30,"width":30,"team":0,"x":90,"y":30},{"height":30,"width":30,"team":0,"x":90,"y":60},{"height":30,"width":30,"team":0,"x":90,"y":90},{"height":30,"width":30,"team":0,"x":90,"y":120},{"height":30,"width":30,"team":0,"x":90,"y":150},{"height":30,"width":30,"team":0,"x":90,"y":180},{"height":30,"width":30,"team":0,"x":90,"y":210},{"height":30,"width":30,"team":0,"x":90,"y":240},{"height":30,"width":30,"team":0,"x":90,"y":270},{"height":30,"width":30,"team":0,"x":90,"y":300},{"height":30,"width":30,"team":0,"x":90,"y":330},{"height":30,"width":30,"team":0,"x":90,"y":360},{"height":30,"width":30,"team":0,"x":90,"y":390},{"height":30,"width":30,"team":0,"x":90,"y":420},{"height":30,"width":30,"team":0,"x":90,"y":450},{"height":30,"width":30,"team":0,"x":90,"y":480},{"height":30,"width":30,"team":0,"x":90,"y":510},{"height":30,"width":30,"team":0,"x":90,"y":540},{"height":30,"width":30,"team":0,"x":90,"y":570}],[{"height":30,"width":30,"team":0,"x":120,"y":0},{"height":30,"width":30,"team":0,"x":120,"y":30},{"height":30,"width":30,"team":0,"x":120,"y":60},{"height":30,"width":30,"team":0,"x":120,"y":90},{"height":30,"width":30,"team":0,"x":120,"y":120},{"height":30,"width":30,"team":0,"x":120,"y":150},{"height":30,"width":30,"team":0,"x":120,"y":180},{"height":30,"width":30,"team":0,"x":120,"y":210},{"height":30,"width":30,"team":0,"x":120,"y":240},{"height":30,"width":30,"team":0,"x":120,"y":270},{"height":30,"width":30,"team":0,"x":120,"y":300},{"height":30,"width":30,"team":0,"x":120,"y":330},{"height":30,"width":30,"team":0,"x":120,"y":360},{"height":30,"width":30,"team":0,"x":120,"y":390},{"height":30,"width":30,"team":0,"x":120,"y":420},{"height":30,"width":30,"team":0,"x":120,"y":450},{"height":30,"width":30,"team":0,"x":120,"y":480},{"height":30,"width":30,"team":0,"x":120,"y":510},{"height":30,"width":30,"team":0,"x":120,"y":540},{"height":30,"width":30,"team":0,"x":120,"y":570}],[{"height":30,"width":30,"team":0,"x":150,"y":0},{"height":30,"width":30,"team":0,"x":150,"y":30},{"height":30,"width":30,"team":0,"x":150,"y":60},{"height":30,"width":30,"team":0,"x":150,"y":90},{"height":30,"width":30,"team":0,"x":150,"y":120},{"height":30,"width":30,"team":0,"x":150,"y":150},{"height":30,"width":30,"team":0,"x":150,"y":180},{"height":30,"width":30,"team":0,"x":150,"y":210},{"height":30,"width":30,"team":0,"x":150,"y":240},{"height":30,"width":30,"team":0,"x":150,"y":270},{"height":30,"width":30,"team":0,"x":150,"y":300},{"height":30,"width":30,"team":0,"x":150,"y":330},{"height":30,"width":30,"team":0,"x":150,"y":360},{"height":30,"width":30,"team":0,"x":150,"y":390},{"height":30,"width":30,"team":0,"x":150,"y":420},{"height":30,"width":30,"team":0,"x":150,"y":450},{"height":30,"width":30,"team":0,"x":150,"y":480},{"height":30,"width":30,"team":0,"x":150,"y":510},{"height":30,"width":30,"team":0,"x":150,"y":540},{"height":30,"width":30,"team":0,"x":150,"y":570}],[{"height":30,"width":30,"team":0,"x":180,"y":0},{"height":30,"width":30,"team":0,"x":180,"y":30},{"height":30,"width":30,"team":0,"x":180,"y":60},{"height":30,"width":30,"team":0,"x":180,"y":90},{"height":30,"width":30,"team":0,"x":180,"y":120},{"height":30,"width":30,"team":0,"x":180,"y":150},{"height":30,"width":30,"team":0,"x":180,"y":180},{"height":30,"width":30,"team":0,"x":180,"y":210},{"height":30,"width":30,"team":0,"x":180,"y":240},{"height":30,"width":30,"team":0,"x":180,"y":270},{"height":30,"width":30,"team":0,"x":180,"y":300},{"height":30,"width":30,"team":0,"x":180,"y":330},{"height":30,"width":30,"team":0,"x":180,"y":360},{"height":30,"width":30,"team":0,"x":180,"y":390},{"height":30,"width":30,"team":0,"x":180,"y":420},{"height":30,"width":30,"team":0,"x":180,"y":450},{"height":30,"width":30,"team":0,"x":180,"y":480},{"height":30,"width":30,"team":0,"x":180,"y":510},{"height":30,"width":30,"team":0,"x":180,"y":540},{"height":30,"width":30,"team":0,"x":180,"y":570}],[{"height":30,"width":30,"team":0,"x":210,"y":0},{"height":30,"width":30,"team":0,"x":210,"y":30},{"height":30,"width":30,"team":0,"x":210,"y":60},{"height":30,"width":30,"team":0,"x":210,"y":90},{"height":30,"width":30,"team":0,"x":210,"y":120},{"height":30,"width":30,"team":0,"x":210,"y":150},{"height":30,"width":30,"team":0,"x":210,"y":180},{"height":30,"width":30,"team":0,"x":210,"y":210},{"height":30,"width":30,"team":0,"x":210,"y":240},{"height":30,"width":30,"team":0,"x":210,"y":270},{"height":30,"width":30,"team":0,"x":210,"y":300},{"height":30,"width":30,"team":0,"x":210,"y":330},{"height":30,"width":30,"team":0,"x":210,"y":360},{"height":30,"width":30,"team":0,"x":210,"y":390},{"height":30,"width":30,"team":0,"x":210,"y":420},{"height":30,"width":30,"team":0,"x":210,"y":450},{"height":30,"width":30,"team":0,"x":210,"y":480},{"height":30,"width":30,"team":0,"x":210,"y":510},{"height":30,"width":30,"team":0,"x":210,"y":540},{"height":30,"width":30,"team":0,"x":210,"y":570}],[{"height":30,"width":30,"team":0,"x":240,"y":0},{"height":30,"width":30,"team":0,"x":240,"y":30},{"height":30,"width":30,"team":0,"x":240,"y":60},{"height":30,"width":30,"team":0,"x":240,"y":90},{"height":30,"width":30,"team":0,"x":240,"y":120},{"height":30,"width":30,"team":0,"x":240,"y":150},{"height":30,"width":30,"team":0,"x":240,"y":180},{"height":30,"width":30,"team":0,"x":240,"y":210},{"height":30,"width":30,"team":0,"x":240,"y":240},{"height":30,"width":30,"team":0,"x":240,"y":270},{"height":30,"width":30,"team":0,"x":240,"y":300},{"height":30,"width":30,"team":0,"x":240,"y":330},{"height":30,"width":30,"team":0,"x":240,"y":360},{"height":30,"width":30,"team":0,"x":240,"y":390},{"height":30,"width":30,"team":0,"x":240,"y":420},{"height":30,"width":30,"team":0,"x":240,"y":450},{"height":30,"width":30,"team":0,"x":240,"y":480},{"height":30,"width":30,"team":0,"x":240,"y":510},{"height":30,"width":30,"team":0,"x":240,"y":540},{"height":30,"width":30,"team":0,"x":240,"y":570}],[{"height":30,"width":30,"team":0,"x":270,"y":0},{"height":30,"width":30,"team":0,"x":270,"y":30},{"height":30,"width":30,"team":0,"x":270,"y":60},{"height":30,"width":30,"team":0,"x":270,"y":90},{"height":30,"width":30,"team":0,"x":270,"y":120},{"height":30,"width":30,"team":0,"x":270,"y":150},{"height":30,"width":30,"team":0,"x":270,"y":180},{"height":30,"width":30,"team":0,"x":270,"y":210},{"height":30,"width":30,"team":0,"x":270,"y":240},{"height":30,"width":30,"team":0,"x":270,"y":270},{"height":30,"width":30,"team":0,"x":270,"y":300},{"height":30,"width":30,"team":0,"x":270,"y":330},{"height":30,"width":30,"team":0,"x":270,"y":360},{"height":30,"width":30,"team":0,"x":270,"y":390},{"height":30,"width":30,"team":0,"x":270,"y":420},{"height":30,"width":30,"team":0,"x":270,"y":450},{"height":30,"width":30,"team":0,"x":270,"y":480},{"height":30,"width":30,"team":0,"x":270,"y":510},{"height":30,"width":30,"team":0,"x":270,"y":540},{"height":30,"width":30,"team":0,"x":270,"y":570}],[{"height":30,"width":30,"team":0,"x":300,"y":0},{"height":30,"width":30,"team":0,"x":300,"y":30},{"height":30,"width":30,"team":0,"x":300,"y":60},{"height":30,"width":30,"team":0,"x":300,"y":90},{"height":30,"width":30,"team":0,"x":300,"y":120},{"height":30,"width":30,"team":0,"x":300,"y":150},{"height":30,"width":30,"team":0,"x":300,"y":180},{"height":30,"width":30,"team":0,"x":300,"y":210},{"height":30,"width":30,"team":0,"x":300,"y":240},{"height":30,"width":30,"team":0,"x":300,"y":270},{"height":30,"width":30,"team":0,"x":300,"y":300},{"height":30,"width":30,"team":0,"x":300,"y":330},{"height":30,"width":30,"team":0,"x":300,"y":360},{"height":30,"width":30,"team":0,"x":300,"y":390},{"height":30,"width":30,"team":0,"x":300,"y":420},{"height":30,"width":30,"team":0,"x":300,"y":450},{"height":30,"width":30,"team":0,"x":300,"y":480},{"height":30,"width":30,"team":0,"x":300,"y":510},{"height":30,"width":30,"team":0,"x":300,"y":540},{"height":30,"width":30,"team":0,"x":300,"y":570}],[{"height":30,"width":30,"team":0,"x":330,"y":0},{"height":30,"width":30,"team":0,"x":330,"y":30},{"height":30,"width":30,"team":0,"x":330,"y":60},{"height":30,"width":30,"team":0,"x":330,"y":90},{"height":30,"width":30,"team":0,"x":330,"y":120},{"height":30,"width":30,"team":0,"x":330,"y":150},{"height":30,"width":30,"team":0,"x":330,"y":180},{"height":30,"width":30,"team":0,"x":330,"y":210},{"height":30,"width":30,"team":0,"x":330,"y":240},{"height":30,"width":30,"team":0,"x":330,"y":270},{"height":30,"width":30,"team":0,"x":330,"y":300},{"height":30,"width":30,"team":0,"x":330,"y":330},{"height":30,"width":30,"team":0,"x":330,"y":360},{"height":30,"width":30,"team":0,"x":330,"y":390},{"height":30,"width":30,"team":0,"x":330,"y":420},{"height":30,"width":30,"team":0,"x":330,"y":450},{"height":30,"width":30,"team":0,"x":330,"y":480},{"height":30,"width":30,"team":0,"x":330,"y":510},{"height":30,"width":30,"team":0,"x":330,"y":540},{"height":30,"width":30,"team":0,"x":330,"y":570}],[{"height":30,"width":30,"team":0,"x":360,"y":0},{"height":30,"width":30,"team":0,"x":360,"y":30},{"height":30,"width":30,"team":0,"x":360,"y":60},{"height":30,"width":30,"team":0,"x":360,"y":90},{"height":30,"width":30,"team":0,"x":360,"y":120},{"height":30,"width":30,"team":0,"x":360,"y":150},{"height":30,"width":30,"team":0,"x":360,"y":180},{"height":30,"width":30,"team":0,"x":360,"y":210},{"height":30,"width":30,"team":0,"x":360,"y":240},{"height":30,"width":30,"team":0,"x":360,"y":270},{"height":30,"width":30,"team":0,"x":360,"y":300},{"height":30,"width":30,"team":0,"x":360,"y":330},{"height":30,"width":30,"team":0,"x":360,"y":360},{"height":30,"width":30,"team":0,"x":360,"y":390},{"height":30,"width":30,"team":0,"x":360,"y":420},{"height":30,"width":30,"team":0,"x":360,"y":450},{"height":30,"width":30,"team":0,"x":360,"y":480},{"height":30,"width":30,"team":0,"x":360,"y":510},{"height":30,"width":30,"team":0,"x":360,"y":540},{"height":30,"width":30,"team":0,"x":360,"y":570}],[{"height":30,"width":30,"team":0,"x":390,"y":0},{"height":30,"width":30,"team":0,"x":390,"y":30},{"height":30,"width":30,"team":0,"x":390,"y":60},{"height":30,"width":30,"team":0,"x":390,"y":90},{"height":30,"width":30,"team":0,"x":390,"y":120},{"height":30,"width":30,"team":0,"x":390,"y":150},{"height":30,"width":30,"team":0,"x":390,"y":180},{"height":30,"width":30,"team":0,"x":390,"y":210},{"height":30,"width":30,"team":0,"x":390,"y":240},{"height":30,"width":30,"team":0,"x":390,"y":270},{"height":30,"width":30,"team":0,"x":390,"y":300},{"height":30,"width":30,"team":0,"x":390,"y":330},{"height":30,"width":30,"team":0,"x":390,"y":360},{"height":30,"width":30,"team":0,"x":390,"y":390},{"height":30,"width":30,"team":0,"x":390,"y":420},{"height":30,"width":30,"team":0,"x":390,"y":450},{"height":30,"width":30,"team":0,"x":390,"y":480},{"height":30,"width":30,"team":0,"x":390,"y":510},{"height":30,"width":30,"team":0,"x":390,"y":540},{"height":30,"width":30,"team":0,"x":390,"y":570}],[{"height":30,"width":30,"team":0,"x":420,"y":0},{"height":30,"width":30,"team":0,"x":420,"y":30},{"height":30,"width":30,"team":0,"x":420,"y":60},{"height":30,"width":30,"team":0,"x":420,"y":90},{"height":30,"width":30,"team":0,"x":420,"y":120},{"height":30,"width":30,"team":0,"x":420,"y":150},{"height":30,"width":30,"team":0,"x":420,"y":180},{"height":30,"width":30,"team":0,"x":420,"y":210},{"height":30,"width":30,"team":0,"x":420,"y":240},{"height":30,"width":30,"team":0,"x":420,"y":270},{"height":30,"width":30,"team":0,"x":420,"y":300},{"height":30,"width":30,"team":0,"x":420,"y":330},{"height":30,"width":30,"team":0,"x":420,"y":360},{"height":30,"width":30,"team":0,"x":420,"y":390},{"height":30,"width":30,"team":0,"x":420,"y":420},{"height":30,"width":30,"team":0,"x":420,"y":450},{"height":30,"width":30,"team":0,"x":420,"y":480},{"height":30,"width":30,"team":0,"x":420,"y":510},{"height":30,"width":30,"team":0,"x":420,"y":540},{"height":30,"width":30,"team":0,"x":420,"y":570}],[{"height":30,"width":30,"team":0,"x":450,"y":0},{"height":30,"width":30,"team":0,"x":450,"y":30},{"height":30,"width":30,"team":0,"x":450,"y":60},{"height":30,"width":30,"team":0,"x":450,"y":90},{"height":30,"width":30,"team":0,"x":450,"y":120},{"height":30,"width":30,"team":0,"x":450,"y":150},{"height":30,"width":30,"team":0,"x":450,"y":180},{"height":30,"width":30,"team":0,"x":450,"y":210},{"height":30,"width":30,"team":0,"x":450,"y":240},{"height":30,"width":30,"team":0,"x":450,"y":270},{"height":30,"width":30,"team":0,"x":450,"y":300},{"height":30,"width":30,"team":0,"x":450,"y":330},{"height":30,"width":30,"team":0,"x":450,"y":360},{"height":30,"width":30,"team":0,"x":450,"y":390},{"height":30,"width":30,"team":0,"x":450,"y":420},{"height":30,"width":30,"team":0,"x":450,"y":450},{"height":30,"width":30,"team":0,"x":450,"y":480},{"height":30,"width":30,"team":0,"x":450,"y":510},{"height":30,"width":30,"team":0,"x":450,"y":540},{"height":30,"width":30,"team":0,"x":450,"y":570}],[{"height":30,"width":30,"team":0,"x":480,"y":0},{"height":30,"width":30,"team":0,"x":480,"y":30},{"height":30,"width":30,"team":0,"x":480,"y":60},{"height":30,"width":30,"team":0,"x":480,"y":90},{"height":30,"width":30,"team":0,"x":480,"y":120},{"height":30,"width":30,"team":0,"x":480,"y":150},{"height":30,"width":30,"team":0,"x":480,"y":180},{"height":30,"width":30,"team":0,"x":480,"y":210},{"height":30,"width":30,"team":0,"x":480,"y":240},{"height":30,"width":30,"team":0,"x":480,"y":270},{"height":30,"width":30,"team":0,"x":480,"y":300},{"height":30,"width":30,"team":0,"x":480,"y":330},{"height":30,"width":30,"team":0,"x":480,"y":360},{"height":30,"width":30,"team":0,"x":480,"y":390},{"height":30,"width":30,"team":0,"x":480,"y":420},{"height":30,"width":30,"team":0,"x":480,"y":450},{"height":30,"width":30,"team":0,"x":480,"y":480},{"height":30,"width":30,"team":0,"x":480,"y":510},{"height":30,"width":30,"team":0,"x":480,"y":540},{"height":30,"width":30,"team":0,"x":480,"y":570}],[{"height":30,"width":30,"team":0,"x":510,"y":0},{"height":30,"width":30,"team":0,"x":510,"y":30},{"height":30,"width":30,"team":0,"x":510,"y":60},{"height":30,"width":30,"team":0,"x":510,"y":90},{"height":30,"width":30,"team":0,"x":510,"y":120},{"height":30,"width":30,"team":0,"x":510,"y":150},{"height":30,"width":30,"team":0,"x":510,"y":180},{"height":30,"width":30,"team":0,"x":510,"y":210},{"height":30,"width":30,"team":0,"x":510,"y":240},{"height":30,"width":30,"team":0,"x":510,"y":270},{"height":30,"width":30,"team":0,"x":510,"y":300},{"height":30,"width":30,"team":0,"x":510,"y":330},{"height":30,"width":30,"team":0,"x":510,"y":360},{"height":30,"width":30,"team":0,"x":510,"y":390},{"height":30,"width":30,"team":0,"x":510,"y":420},{"height":30,"width":30,"team":0,"x":510,"y":450},{"height":30,"width":30,"team":0,"x":510,"y":480},{"height":30,"width":30,"team":0,"x":510,"y":510},{"height":30,"width":30,"team":0,"x":510,"y":540},{"height":30,"width":30,"team":0,"x":510,"y":570}],[{"height":30,"width":30,"team":0,"x":540,"y":0},{"height":30,"width":30,"team":0,"x":540,"y":30},{"height":30,"width":30,"team":0,"x":540,"y":60},{"height":30,"width":30,"team":0,"x":540,"y":90},{"height":30,"width":30,"team":0,"x":540,"y":120},{"height":30,"width":30,"team":0,"x":540,"y":150},{"height":30,"width":30,"team":0,"x":540,"y":180},{"height":30,"width":30,"team":0,"x":540,"y":210},{"height":30,"width":30,"team":0,"x":540,"y":240},{"height":30,"width":30,"team":0,"x":540,"y":270},{"height":30,"width":30,"team":0,"x":540,"y":300},{"height":30,"width":30,"team":0,"x":540,"y":330},{"height":30,"width":30,"team":0,"x":540,"y":360},{"height":30,"width":30,"team":0,"x":540,"y":390},{"height":30,"width":30,"team":0,"x":540,"y":420},{"height":30,"width":30,"team":0,"x":540,"y":450},{"height":30,"width":30,"team":0,"x":540,"y":480},{"height":30,"width":30,"team":0,"x":540,"y":510},{"height":30,"width":30,"team":0,"x":540,"y":540},{"height":30,"width":30,"team":0,"x":540,"y":570}],[{"height":30,"width":30,"team":0,"x":570,"y":0},{"height":30,"width":30,"team":0,"x":570,"y":30},{"height":30,"width":30,"team":0,"x":570,"y":60},{"height":30,"width":30,"team":0,"x":570,"y":90},{"height":30,"width":30,"team":0,"x":570,"y":120},{"height":30,"width":30,"team":0,"x":570,"y":150},{"height":30,"width":30,"team":0,"x":570,"y":180},{"height":30,"width":30,"team":0,"x":570,"y":210},{"height":30,"width":30,"team":0,"x":570,"y":240},{"height":30,"width":30,"team":0,"x":570,"y":270},{"height":30,"width":30,"team":0,"x":570,"y":300},{"height":30,"width":30,"team":0,"x":570,"y":330},{"height":30,"width":30,"team":0,"x":570,"y":360},{"height":30,"width":30,"team":0,"x":570,"y":390},{"height":30,"width":30,"team":0,"x":570,"y":420},{"height":30,"width":30,"team":0,"x":570,"y":450},{"height":30,"width":30,"team":0,"x":570,"y":480},{"height":30,"width":30,"team":0,"x":570,"y":510},{"height":30,"width":30,"team":1,"x":570,"y":540},{"height":30,"width":30,"team":0,"x":570,"y":570}]]
+    $( "#json-grid")
+    .text(JSON.stringify(gridData))
+    .hide();
+
+    var grid = d3.select("#grid")
+    	.append("svg")
+    	.attr("width","800px")
+    	.attr("height","800px");
+
+    var row = grid.selectAll(".row")
+    	.data(gridData)
+    	.enter().append("g")
+    	.attr("class", "row");
+
+    var column = row.selectAll(".square")
+    	.data(function(d) { return d; })
+    	.enter().append("rect")
+    	.attr("class","square")
+    	.attr("class", function(d) {
+    	    if (d.team == 1){
+                return "blank"}
+            else if (d.team == 2){
+                return "blank"}
+            else if (d.team == 3){
+                return "center"}
+             else if (d.team == 4){
+                return "center"}
+            else
+                return "#fff"
+    	})
+    	.attr("x", function(d) { return d.x; })
+    	.attr("y", function(d) { return d.y; })
+    	.attr("width", function(d) { return d.width; })
+    	.attr("height", function(d) { return d.height; })
+    	.style("fill", function(d) {
+            if (d.team == 1){
+                return "#e82cb9"}
+            else if (d.team == 2){
+                return "#efe92f"}
+            else if (d.team == 3){
+                return "black"}
+             else if (d.team == 4){
+                return "black"}
+            else
+                return "#fff"
+        })
+    	.style("stroke", "#222")
+        .on('click', function(d) {
+           var x = $(this).attr('x');
+           var y = $(this).attr('y');
+           var json = JSON.stringify({"x":x,"y":y});
+           var data = "["+json+","+$('#json-grid').text()+"]"
+           alert(data);
+           //move(data)
+           });
+
+};
 
 
-//var gridData = gridData();
-// I like to log the data to the console for quick debugging
-console.log(gridData);
+$.getJSON('http://localhost:9000/startPositions/40', function(json){
 
-var grid = d3.select("#grid")
-	.append("svg")
-	.attr("width","800px")
-	.attr("height","800px");
+   build(json)
 
-var row = grid.selectAll(".row")
-	.data(gridData)
-	.enter().append("g")
-	.attr("class", "row");
+});
 
-var column = row.selectAll(".square")
-	.data(function(d) { return d; })
-	.enter().append("rect")
-	.attr("class","square")
-	.attr("x", function(d) { return d.x; })
-	.attr("y", function(d) { return d.y; })
-	.attr("width", function(d) { return d.width; })
-	.attr("height", function(d) { return d.height; })
-	.style("fill", function(d) {
-	                    if (d.team == 1){
-	                        return "#e82cb9"}
-	                    else if (d.team == 2){
-	                        return "#efe92f"}
-	                    else
-	                        return "#fff"
-	                })
-	.style("stroke", "#222");
-//	.on('mouseover', function(d) {
-//	   d3.select(this).style("fill","#efe92f");
-//    });
 
-// Ajax here to call webservice and return datafrid
+
+
+

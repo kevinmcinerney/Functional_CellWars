@@ -1,5 +1,6 @@
 import org.scalatestplus.play.PlaySpec
-import game.{Board, Cell, Coordinate, Team}
+import game.{Cell, Coordinate, Team}
+import model.Board
 
 
 /**
@@ -151,7 +152,7 @@ class GameSpec extends PlaySpec {
   val merged2 = (cell4 merge cell5).get merge cell6
   "recursively merging teams" should {
     "should give correct new team" in {
-      team2.recMerge(team2).getCells mustEqual  new Team(merged2.get :: List(cell1,cell2,cell3)).getCells
+      team2.recMerge(team2).cells mustEqual  new Team(merged2.get :: List(cell1,cell2,cell3)).cells
     }
   }
 

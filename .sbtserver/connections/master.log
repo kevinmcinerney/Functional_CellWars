@@ -1,7 +1,13 @@
-New log file opened at Mon Jan 28 12:35:03 GMT 2019 by 21219@Babage-Machine
-Taking next connection to: 35363
-New client attempting to connect on port: 38658-35363
-  Address = /127.0.1.1:35363
-This client on port 38658 has uuid 2f5822a2-1d0c-417a-9445-073945fe7e05 configName play-fork-run humanReadableName Play Fork Run protocolVersion 1 featureTags Vector()
-Connected Clients: play-fork-run-2f5822a2-1d0c-417a-9445-073945fe7e05
-Taking next connection to: 35363
+New log file opened at Tue Jan 29 15:08:55 GMT 2019 by 8404@Babage-Machine
+Taking next connection to: 37443
+New client attempting to connect on port: 45128-37443
+  Address = /127.0.1.1:37443
+This client on port 45128 has uuid 3a95380b-d822-4d33-b1db-f082bc5d5dd1 configName play-fork-run humanReadableName Play Fork Run protocolVersion 1 featureTags Vector()
+Connected Clients: play-fork-run-3a95380b-d822-4d33-b1db-f082bc5d5dd1
+Taking next connection to: 37443
+Checking to see if clients are empty...
+No non-daemon clients connected after 3 min. Shutting down.
+Server socket thread exiting.
+0 clients open, will close them...
+All client sockets have been closed.
+Closing the 8404@Babage-Machine logs at Tue Jan 29 15:11:55 GMT 2019, goodbye.

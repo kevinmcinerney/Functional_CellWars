@@ -50,8 +50,22 @@ case class Cell(topLeft: Coordinate, botRight: Coordinate) {
     } yield Coordinate(x, y)
   }.toList
 
+  def drawCells: List[Coordinate] = {
+    for {
+      x <- topLeft.x until botRight.x
+      y <- topLeft.y until botRight.y
+    } yield Coordinate(x, y)
+  }.toList
+
+  def centerCell: Coordinate = {
+    Coordinate(topLeft.x + 1, topLeft.y + 1)
+  }
+
   def contains(other: Cell): Boolean =
     outerCells.exists(point => other.innerCells.contains(point))
+
+  def contains(other: Coordinate): Boolean =
+    outerCells.contains(other)
 
   def merge(other: Cell): Option[Cell] = {
     if(this contains other){

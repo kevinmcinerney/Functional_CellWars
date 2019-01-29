@@ -36,10 +36,29 @@ case class Team(cells: List[Cell]) {
     mergedCells ::: unmergedCells
   }
 
-  def getCells: List[Cell] = cells
-
-
-
   def allPairs(n: Int): List[List[Cell]] = this.cells.combinations(n).toList
 
+  // TEST
+  def up(team: Team, point: Coordinate): Team = {
+    val (mover, others) = team.cells.partition(_.contains(point))
+    Team(others :+ mover.head.up)
+  }
+
+  // TEST
+  def right(team: Team, point: Coordinate): Team = {
+    val (mover, others) = team.cells.partition(_.contains(point))
+    Team(others :+ mover.head.right)
+  }
+
+  // TEST
+  def down(team: Team, point: Coordinate): Team = {
+    val (mover, others) = team.cells.partition(_.contains(point))
+    Team(others :+ mover.head.down)
+  }
+
+  // TEST
+  def left(team: Team, point: Coordinate): Team = {
+    val (mover, others) = team.cells.partition(_.contains(point))
+    Team(others :+ mover.head.left)
+  }
 }

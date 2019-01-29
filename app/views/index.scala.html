@@ -16,6 +16,9 @@
  <meta name="generator" content="Jekyll v3.8.5">
  <title>Cover Template · Bootstrap</title>
 
+ <!-- jquery -->
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
  <!-- Bootstrap core CSS -->
  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
@@ -42,17 +45,18 @@
 <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
  <header class="masthead mb-auto">
   <div class="inner">
-   <h3 class="masthead-brand">@title</h3>
-   <nav class="nav nav-masthead justify-content-center">
-    <a class="nav-link active" href="#">Home</a>
-    <a class="nav-link" href="#">Research</a>
-    <a class="nav-link" href="#">Contact</a>
-   </nav>
+   <h3 class="glow">@title</h3>
+   <!--<nav class="nav nav-masthead justify-content-center">-->
+    <!--<a class="nav-link active" href="#">Home</a>-->
+    <!--<a class="nav-link" href="#">Research</a>-->
+    <!--<a class="nav-link" href="#">Contact</a>-->
+   <!--</nav>-->
   </div>
  </header>
 
  <main role="main" class="inner cover">
 
+  <div id="json-grid"> </div>
   <div id="grid"> </div>
 
   <script type="text/javascript" src="@routes.Assets.versioned("javascripts/grid.js")"></script>

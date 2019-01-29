@@ -22,4 +22,4 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
 
 
-fork in run := true
+fork in run := false
