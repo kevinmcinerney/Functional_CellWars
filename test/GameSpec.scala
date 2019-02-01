@@ -8,12 +8,16 @@ import model.Board
   */
 class GameSpec extends PlaySpec {
 
-  val board = Board(20)
   val cell1 = Cell(Coordinate(0,0),Coordinate(2,2))
   val cell2 = Cell(Coordinate(17,17),Coordinate(19,19))
   val cell3 = Cell(Coordinate(7,7), Coordinate(10,10))
   val cell4 = Cell(Coordinate(3,3), Coordinate(6,6))
   val cell5 = Cell(Coordinate(2,2), Coordinate(5,5))
+
+  val teamOne = Team(List(cell1,cell2,cell3,cell1,cell2))
+  val teamTwo = Team(List(cell4,cell5,cell6,cell1,cell2))
+  val board = Board(teamOne, teamTwo)
+
 
 
   "allowable board values " should {
@@ -143,7 +147,7 @@ class GameSpec extends PlaySpec {
 
   "merging teams" should {
     "should give correct new team" in {
-     team.merge(team) mustEqual  (merged.get :: List(cell1,cell2,cell3))
+     Team.merge(team) mustEqual  (merged.get :: List(cell1,cell2,cell3))
     }
   }
 
@@ -152,8 +156,38 @@ class GameSpec extends PlaySpec {
   val merged2 = (cell4 merge cell5).get merge cell6
   "recursively merging teams" should {
     "should give correct new team" in {
-      team2.recMerge(team2).cells mustEqual  new Team(merged2.get :: List(cell1,cell2,cell3)).cells
+      Team.recMerge(team2).cells mustEqual  new Team(merged2.get :: List(cell1,cell2,cell3)).cells
     }
   }
+
+  val cell7 = Cell(Coordinate(7,8),Coordinate(10,11))
+  "(7-7)-(10-10) moved down is" should {
+    "(7-8)-(10-11)" in {
+      Team.down(Team(List(cell1,cell2,cell3,cell4,cell5,cell6)),Coordinate(8,8)) mustEqual Team(List(cell1,cell2,cell4,cell5,cell6,cell7))
+    }
+  }
+
+  val cell8 = Cell(Coordinate(7,6),Coordinate(10,9))
+  "(7-7)-(10-10) moved up is" should {
+    "(7-6)-(10-9)" in {
+      Team.up(Team(List(cell1,cell2,cell3,cell4,cell5,cell6)),Coordinate(8,7)) mustEqual Team(List(cell1,cell2,cell4,cell5,cell6,cell8))
+    }
+  }
+
+  val cell9 = Cell(Coordinate(6,7),Coordinate(9,10))
+  "(7-7)-(10-10) moved left is" should {
+    "(6-7)-(9-10)" in {
+      Team.left(Team(List(cell1,cell2,cell3,cell4,cell5,cell6)),Coordinate(8,8)) mustEqual Team(List(cell1,cell2,cell4,cell5,cell6,cell9))
+    }
+  }
+
+  val cell10 = Cell(Coordinate(8,7),Coordinate(11,10))
+  "(7-7)-(10-10) moved up is" should {
+    "(8-7)-(11-10)" in {
+      Team.right(Team(List(cell1,cell2,cell3,cell4,cell5,cell6)),Coordinate(8,7)) mustEqual Team(List(cell1,cell2,cell4,cell5,cell6,cell10))
+    }
+  }
+
+
 
 }

@@ -2,11 +2,12 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
-import model.{Grid}
 import play.api.mvc.{Action, Controller}
 import services.Counter
 import com.google.gson.Gson
 import game.{Cell, Coordinate, Team}
+import model.{Board, BoardWrapper}
+import play.api.libs.json.{JsObject, JsValue, Json, Reads}
 
 /**
   * Created by kevin on 25/04/17.
@@ -15,9 +16,7 @@ import game.{Cell, Coordinate, Team}
 class GameController  @Inject() extends Controller {
 
   /**
-    * Create an action that responds with the [[Counter]]'s current
-    * count. The result is plain text. This `Action` is mapped to
-    * `GET /count` requests by an entry in the `routes` config file.
+   fillllllll
     */
   def game = Action { Ok(views.html.game("This is your game")) }
 
@@ -40,53 +39,62 @@ class GameController  @Inject() extends Controller {
 
     val teamTwo = loadTeam(size - 3, numPerTeam)
 
-    val array = Array.ofDim[Grid](size, size)
-    val length = 600 / size
-    for (x_px <- 0 until 600 by length) {
-      for (y_px <- 0 until 600 by length) {
-        val x = x_px / length
-        val y = y_px / length
-        array(x)(y) = Grid(length,length, 0, x_px, y_px)
-      }
-    }
+    val board = Board(teamOne, teamTwo)
 
-    teamOne.cells.foreach(cell => cell.drawCells
-      .foreach(point => {array(point.x)(point.y)
-        = Grid(length, length, 1, point.x*length, point.y*length)}))
+    val boardWrapper = BoardWrapper(board, 0,0,"down")
 
-    teamTwo.cells.foreach(cell => cell.drawCells
-      .foreach(point => {array(point.x)(point.y)
-        = Grid(length, length, 2, point.x*length, point.y*length)}))
-
-    teamOne.cells.foreach(cell =>  {array(cell.centerCell.x)(cell.centerCell.y)
-      = Grid(length, length, 3, cell.centerCell.x*length, cell.centerCell.y*length)})
-
-    teamTwo.cells.foreach(cell =>  {array(cell.centerCell.x)(cell.centerCell.y)
-      = Grid(length, length, 4, cell.centerCell.x*length, cell.centerCell.y*length)})
-
-
-    val gson = new Gson
-    val board = gson.toJson(array)
-
-    Ok(board.toString)
+    Ok(BoardWrapper.writeBoard(boardWrapper))
 
   }
 
   def move() = Action {
     request =>
-      val gson = new Gson
-      val json = request.body.asJson.get
-      val board = gson.fromJson(json.toString(), classOf[Array[Array[Grid]]])
 
-    // CONVERT WRAPPER OBJECT INTO TEAMS -> CELLS -> COORDINATES
+      val board = Json.fromJson[BoardWrapper](request.body.asJson.get).get
 
-    // MOVE CORRECT CELL
+      val teamOne = board.board.teamOne
 
-    //val jsonBoard = gson.toJson(board)
+      val teamTwo = board.board.teamTwo
 
-    Ok(board.toString)
+      val movePoint = Coordinate(board.x, board.y)
+
+      val move = board.move
+
+
+      if (move == "up") {
+        val t1 = Team.up(teamOne, movePoint)
+        //val t2 = Team.up(teamTwo, movePoint)
+        val board = Board(t1, teamTwo)
+        val boardWrapper = BoardWrapper(board,0,0,"none")
+        Ok(Json.toJson(boardWrapper))
+      }
+      else if (move == "down") {
+        val t1 = Team.down(teamOne, movePoint)
+        //val t2 = Team.down(teamTwo, movePoint) //fix this which team is picked
+        val board = Board(t1, teamTwo)
+        val boardWrapper = BoardWrapper(board,0,0,"none")
+        Ok(Json.toJson(boardWrapper))
+      }
+      else if (move == "left") {
+        val t1 = Team.left(teamOne, movePoint)
+        val t2 = Team.left(teamTwo, movePoint)
+        val board = Board(t1, teamTwo)
+        val boardWrapper = BoardWrapper(board,0,0,"none")
+        Ok(Json.toJson(boardWrapper))
+
+      } else {
+        val t1 = Team.right(teamOne, movePoint)
+        val t2 = Team.right(teamTwo, movePoint)
+        val board = Board(t1, teamTwo)
+        val boardWrapper = BoardWrapper(board,0,0,"none")
+        Ok(Json.toJson(boardWrapper))
+      }
 
   }
+
+
+
+
 
 
 }

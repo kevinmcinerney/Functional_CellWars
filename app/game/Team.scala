@@ -1,11 +1,21 @@
 package game
 
+import model.Board
+
 /**
   * Created by kevin on 30/04/17.
   */
+
+
 case class Team(cells: List[Cell]) {
 
   def size = cells.size
+
+  def allPairs(n: Int): List[List[Cell]] = this.cells.combinations(n).toList
+
+}
+
+object Team{
 
   def mergedNeeded(team: Team): Boolean = {
     team.allPairs(2)
@@ -36,29 +46,38 @@ case class Team(cells: List[Cell]) {
     mergedCells ::: unmergedCells
   }
 
-  def allPairs(n: Int): List[List[Cell]] = this.cells.combinations(n).toList
-
-  // TEST
   def up(team: Team, point: Coordinate): Team = {
     val (mover, others) = team.cells.partition(_.contains(point))
-    Team(others :+ mover.head.up)
+    Team(mover.head.up :: others)
   }
 
-  // TEST
   def right(team: Team, point: Coordinate): Team = {
     val (mover, others) = team.cells.partition(_.contains(point))
-    Team(others :+ mover.head.right)
+    Team(mover.head.right :: others)
   }
 
-  // TEST
   def down(team: Team, point: Coordinate): Team = {
     val (mover, others) = team.cells.partition(_.contains(point))
-    Team(others :+ mover.head.down)
+    println(mover)
+    println(others)
+    Team(mover.head.down :: others)
   }
 
-  // TEST
   def left(team: Team, point: Coordinate): Team = {
     val (mover, others) = team.cells.partition(_.contains(point))
-    Team(others :+ mover.head.left)
+    Team(mover.head.left :: others)
+  }
+
+  import play.api.libs.json._
+
+  implicit val teamFormats = Json.format[Team]
+
+  def writeTeam(team: Team): JsValue = {
+    Json.toJson(team)
+  }
+
+  def readTeam(jsonTeam: JsValue): Team = {
+    val cells = (jsonTeam \ "cells").as[List[Cell]]
+    Team(cells)
   }
 }

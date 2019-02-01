@@ -23,7 +23,7 @@ case class Cell(topLeft: Coordinate, botRight: Coordinate) {
   def left: Cell = {
     Cell(
       Coordinate(topLeft.x - 1, topLeft.y + 0)
-      , Coordinate(botRight.x - 0, botRight.y + 0))
+      , Coordinate(botRight.x - 1, botRight.y + 0))
   }
 
   def right: Cell = {
@@ -84,4 +84,21 @@ case class Cell(topLeft: Coordinate, botRight: Coordinate) {
 
   override def toString: String = " ("+ topLeft.x + "," + topLeft.y + ")-(" + botRight.x + "," + botRight.y + ") "
 
+}
+
+object Cell{
+
+  import play.api.libs.json._
+
+  implicit val cellFormats = Json.format[Cell]
+
+  def writeCell(cell: Cell): JsValue = {
+    Json.toJson(cell)
+  }
+
+  def readTeam(jsonCell: JsValue): Cell = {
+    val topLeft = (jsonCell \ "topLeft").as[Coordinate]
+    val botRight = (jsonCell \ "botRight").as[Coordinate]
+    Cell(topLeft, botRight)
+  }
 }
