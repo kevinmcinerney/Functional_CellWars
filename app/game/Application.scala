@@ -29,8 +29,7 @@ object Application extends App{
   val movePoint = Coordinate(1, 1)
 
 
-  val t1 = Team.down(teamOne, movePoint)
+  val t1 = board.down(movePoint)
 
-  t1.cells.foreach(println(_))
 
 }

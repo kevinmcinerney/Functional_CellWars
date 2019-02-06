@@ -9,6 +9,8 @@ import game.{Cell, Coordinate, Team}
 import model.{Board, BoardWrapper}
 import play.api.libs.json.{JsObject, JsValue, Json, Reads}
 
+import scala.util.{Failure, Success}
+
 /**
   * Created by kevin on 25/04/17.
   */
@@ -41,7 +43,7 @@ class GameController  @Inject() extends Controller {
 
     val board = Board(teamOne, teamTwo)
 
-    val boardWrapper = BoardWrapper(board, 0,0,"down")
+    val boardWrapper = BoardWrapper(board, 0, 0, "down")
 
     Ok(BoardWrapper.writeBoard(boardWrapper))
 
@@ -50,44 +52,54 @@ class GameController  @Inject() extends Controller {
   def move() = Action {
     request =>
 
-      val board = Json.fromJson[BoardWrapper](request.body.asJson.get).get
+      val boardWrapper = Json.fromJson[BoardWrapper](request.body.asJson.get).get
 
-      val teamOne = board.board.teamOne
+      val board = boardWrapper.board
 
-      val teamTwo = board.board.teamTwo
+      val movePoint = Coordinate(boardWrapper.x, boardWrapper.y)
 
-      val movePoint = Coordinate(board.x, board.y)
-
-      val move = board.move
-
+      val move = boardWrapper.move
 
       if (move == "up") {
-        val t1 = Team.up(teamOne, movePoint)
-        //val t2 = Team.up(teamTwo, movePoint)
-        val board = Board(t1, teamTwo)
-        val boardWrapper = BoardWrapper(board,0,0,"none")
-        Ok(Json.toJson(boardWrapper))
+
+        board.up(movePoint) match {
+          case Success(v) =>
+            val boardWrapperResult = BoardWrapper(v, boardWrapper.x, boardWrapper.y, "none")
+            Ok(Json.toJson(boardWrapperResult))
+          case Failure(e) =>
+            Ok("INVALID MOVE: " + e)
+        }
+
       }
       else if (move == "down") {
-        val t1 = Team.down(teamOne, movePoint)
-        //val t2 = Team.down(teamTwo, movePoint) //fix this which team is picked
-        val board = Board(t1, teamTwo)
-        val boardWrapper = BoardWrapper(board,0,0,"none")
-        Ok(Json.toJson(boardWrapper))
+
+        board.down(movePoint) match {
+          case Success(v) =>
+            val boardWrapperResult = BoardWrapper(v, boardWrapper.x, boardWrapper.y, "none")
+            Ok(Json.toJson(boardWrapperResult))
+          case Failure(e) =>
+            Ok("INVALID MOVE: " + e)
+        }
       }
       else if (move == "left") {
-        val t1 = Team.left(teamOne, movePoint)
-        val t2 = Team.left(teamTwo, movePoint)
-        val board = Board(t1, teamTwo)
-        val boardWrapper = BoardWrapper(board,0,0,"none")
-        Ok(Json.toJson(boardWrapper))
+
+        board.left(movePoint) match {
+          case Success(v) =>
+            val boardWrapperResult = BoardWrapper(v, boardWrapper.x, boardWrapper.y, "none")
+            Ok(Json.toJson(boardWrapperResult))
+          case Failure(e) =>
+            Ok("INVALID MOVE: " + e)
+        }
 
       } else {
-        val t1 = Team.right(teamOne, movePoint)
-        val t2 = Team.right(teamTwo, movePoint)
-        val board = Board(t1, teamTwo)
-        val boardWrapper = BoardWrapper(board,0,0,"none")
-        Ok(Json.toJson(boardWrapper))
+
+        board.right(movePoint) match {
+          case Success(v) =>
+            val boardWrapperResult = BoardWrapper(v, boardWrapper.x, boardWrapper.y, "none")
+            Ok(Json.toJson(boardWrapperResult))
+          case Failure(e) =>
+            Ok("INVALID MOVE: " + e)
+        }
       }
 
   }

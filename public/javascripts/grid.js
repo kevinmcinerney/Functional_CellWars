@@ -1,19 +1,24 @@
 function move(json, x, y, move){
 
-      var obj = JSON.stringify(json)
-      console.log(obj)
+      var j = JSON.parse(json)
+      j.x = x
+      j.y = y
+      j.move = move
+      var obj = JSON.stringify(j)
+      console.log(j)
 
       $.ajax({
         url: 'http://localhost:9000/move',
         type: "POST",
-        data: json,
+        data: obj,
         contentType:"application/json;",
         dataType:"json",
         success: function(data){
           build(data, 40)
         },
-        error: function(msg){
-        console.log(msg)}})
+        error: function(request, status, error){
+            alert(request.responseText)}
+            })
 };
 
 function build(response, size){
@@ -67,18 +72,31 @@ function build(response, size){
         }
     }
 
+    for(team in response.board.teamOne.cells){
+        var c = response.board.teamOne.cells[team];
+        x1 = c.topLeft.x;
+        y1 = c.topLeft.y;
+        data[y1+1][x1+1].team = 2;
+     }
+
     for(team in response.board.teamTwo.cells){
-            var c = response.board.teamTwo.cells[team];
-            x1 = c.topLeft.x;
-            y1 = c.topLeft.y;
-            x2 = c.botRight.x;
-            y2 = c.botRight.y;
-        	for (var row = x1; row < x2; row++) {
-                for (var col = y1; col < y2; col++) {
-                    data[col][row].team = 1;
+        var c = response.board.teamTwo.cells[team];
+        x1 = c.topLeft.x;
+        y1 = c.topLeft.y;
+        x2 = c.botRight.x;
+        y2 = c.botRight.y;
+        for (var row = x1; row < x2; row++) {
+            for (var col = y1; col < y2; col++) {
+                data[col][row].team = 1;
                 }
             }
         }
+    for(team in response.board.teamTwo.cells){
+        var c = response.board.teamTwo.cells[team];
+        x1 = c.topLeft.x;
+        y1 = c.topLeft.y;
+        data[y1+1][x1+1].team = 3;
+    }
 
 
 
@@ -103,7 +121,8 @@ function build(response, size){
 
     var column = row.selectAll(".square")
     .data(function(d) { return d; })
-    .enter().append("rect")
+    .enter()
+    .append("rect")
     .attr("class","square")
     .attr("class", function(d) {
         if (d.team == 0){
@@ -115,7 +134,7 @@ function build(response, size){
          else if (d.team == 3){
             return "center"}
         else
-            return "#fff"
+            return "blank"
     })
     .attr("x", function(d) { return d.x; })
     .attr("y", function(d) { return d.y; })
@@ -137,9 +156,24 @@ function build(response, size){
     .on('click', function(d) {
        var x = ($(this).attr('x') - 1) / $(this).attr('height');
        var y = ($(this).attr('y') - 1) / $(this).attr('height');
-       var json = $('#json-grid').text();
-       alert("x= "+ x + " y= " + y + json)
-       move(json, x, y, "down")
+       if(d.team == 2 || d.team == 3){
+           var json = $('#json-grid').text();
+           var opt = prompt("(1) Up, (2) Down, (3) Left, (4) Right");
+           var choice;
+           if(opt == 1){
+               choice = "up"
+           }else if(opt == 2) {
+               choice = "down"
+           }else if(opt == 3){
+               choice = "left"
+           }else{
+               choice = "right"
+           }
+           move(json, x, y, choice)
+       }else{
+            alert("Click on Cell center to make move")
+       }
+
        });
 
 };
@@ -154,7 +188,9 @@ function startPositions(size){
 
 };
 
+
 startPositions(40)
+
 
 
 
