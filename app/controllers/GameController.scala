@@ -5,8 +5,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, Controller}
 import services.Counter
 import com.google.gson.Gson
-import game.{Cell, Coordinate, Team}
-import model.{Board, BoardWrapper}
+import game.{Cell, Point, Point$, Team}
+import model.{Board, BoardWrapper, Database, Move}
 import play.api.libs.json.{JsObject, JsValue, Json, Reads}
 
 import scala.util.{Failure, Success}
@@ -22,14 +22,13 @@ class GameController  @Inject() extends Controller {
     */
   def game = Action { Ok(views.html.game("This is your game")) }
 
-
   def startPositions(size: Int) = Action {
 
     def loadTeam(x: Int, teamSize: Int): Team = {
 
       val team = for {
         y <- 0 until (teamSize * 4) by 4
-      } yield Cell(Coordinate(x, y), Coordinate(x + 3, y + 3))
+      } yield Cell(Point(x, y), Point(x + 3, y + 3))
 
       Team(team.toList)
 
@@ -43,6 +42,8 @@ class GameController  @Inject() extends Controller {
 
     val board = Board(teamOne, teamTwo)
 
+    Database.addBoard(board)
+
     val boardWrapper = BoardWrapper(board, 0, 0, "down")
 
     Ok(BoardWrapper.writeBoard(boardWrapper))
@@ -52,40 +53,43 @@ class GameController  @Inject() extends Controller {
   def move() = Action {
     request =>
 
-      val boardWrapper = Json.fromJson[BoardWrapper](request.body.asJson.get).get
+      val board = Database.getBoard()
 
-      val board = boardWrapper.board
+      val move = Json.fromJson[Move](request.body.asJson.get).get
 
-      val movePoint = Coordinate(boardWrapper.x, boardWrapper.y)
+      val movePoint = Point(move.x, move.y)
 
-      val move = boardWrapper.move
+      val direction = move.move
 
-      if (move == "up") {
+      if (direction == "up") {
 
         board.up(movePoint) match {
           case Success(v) =>
-            val boardWrapperResult = BoardWrapper(v, boardWrapper.x, boardWrapper.y, "none")
+            Database.addBoard(v)
+            val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
             Ok(Json.toJson(boardWrapperResult))
           case Failure(e) =>
             Ok("INVALID MOVE: " + e)
         }
 
       }
-      else if (move == "down") {
+      else if (direction == "down") {
 
         board.down(movePoint) match {
           case Success(v) =>
-            val boardWrapperResult = BoardWrapper(v, boardWrapper.x, boardWrapper.y, "none")
+            Database.addBoard(v)
+            val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
             Ok(Json.toJson(boardWrapperResult))
           case Failure(e) =>
             Ok("INVALID MOVE: " + e)
         }
       }
-      else if (move == "left") {
+      else if (direction == "left") {
 
         board.left(movePoint) match {
           case Success(v) =>
-            val boardWrapperResult = BoardWrapper(v, boardWrapper.x, boardWrapper.y, "none")
+            Database.addBoard(v)
+            val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
             Ok(Json.toJson(boardWrapperResult))
           case Failure(e) =>
             Ok("INVALID MOVE: " + e)
@@ -95,7 +99,8 @@ class GameController  @Inject() extends Controller {
 
         board.right(movePoint) match {
           case Success(v) =>
-            val boardWrapperResult = BoardWrapper(v, boardWrapper.x, boardWrapper.y, "none")
+            Database.addBoard(v)
+            val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
             Ok(Json.toJson(boardWrapperResult))
           case Failure(e) =>
             Ok("INVALID MOVE: " + e)

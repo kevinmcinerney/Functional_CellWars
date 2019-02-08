@@ -1,11 +1,7 @@
-function move(json, x, y, move){
+function move(json){
 
-      var j = JSON.parse(json)
-      j.x = x
-      j.y = y
-      j.move = move
-      var obj = JSON.stringify(j)
-      console.log(j)
+      var obj = JSON.stringify(json)
+      console.log(obj)
 
       $.ajax({
         url: 'http://localhost:9000/move',
@@ -102,10 +98,6 @@ function build(response, size){
 
     console.log(data);
 
-    $( "#json-grid")
-    .text(JSON.stringify(response))
-    .hide();
-
     var svg = d3.select('svg');
     svg.remove();
 
@@ -157,7 +149,7 @@ function build(response, size){
        var x = ($(this).attr('x') - 1) / $(this).attr('height');
        var y = ($(this).attr('y') - 1) / $(this).attr('height');
        if(d.team == 2 || d.team == 3){
-           var json = $('#json-grid').text();
+
            var opt = prompt("(1) Up, (2) Down, (3) Left, (4) Right");
            var choice;
            if(opt == 1){
@@ -169,7 +161,7 @@ function build(response, size){
            }else{
                choice = "right"
            }
-           move(json, x, y, choice)
+           move({"x":x,"y":y,"move": choice})
        }else{
             alert("Click on Cell center to make move")
        }

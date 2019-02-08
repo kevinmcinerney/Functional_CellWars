@@ -1,46 +1,72 @@
 package game
 
 import breeze.linalg.{max, min}
+import breeze.math.MutablizingAdaptor.CoordinateFieldAdaptor
 
 
 /**
   * Created by kevin on 29/04/17.
   */
-case class Cell(topLeft: Coordinate, botRight: Coordinate) {
+case class Cell(topLeft: Point, botRight: Point){
 
+  def up: Cell = {
+    Cell(
+      Point(topLeft.x + 0, topLeft.y - 1)
+      , Point(botRight.x + 0, botRight.y - 1))
+}
+  
+  def down: Cell = {
+    Cell(
+      Point(topLeft.x + 0, topLeft.y + 1)
+      , Point(botRight.x + 0, botRight.y + 1))
+  }
 
-  def up = Cell.up(this)
+  def left: Cell = {
+    Cell(
+      Point(topLeft.x - 1, topLeft.y + 0)
+      , Point(botRight.x - 1, botRight.y + 0))
+  }
 
-  def down = Cell.down(this)
+  def right: Cell = {
+    Cell(
+      Point(topLeft.x + 1, topLeft.y + 0)
+      , Point(botRight.x + 1, botRight.y + 0))
+  }
 
-  def left = Cell.left(this)
+  def realCell: Boolean = {
+    (botRight.x - topLeft.x) == 3 && (botRight.y - topLeft.y) == 3
+  }
 
-  def right = Cell.right(this)
+  def nucleus: Option[Point] = {
+    if(realCell){
+      Some(Point(topLeft.x + 1, topLeft.y + 1 ))
+    }
+    else{ None }
+  }
 
-  def realCell = Cell.realCell(this)
-
-  def nucleus = Cell.nucleus(this)
-
-  def innerCells: List[Coordinate] = {
+  def innerCells: List[Point] = {
     for {
       x <- topLeft.x + 1 until botRight.x
       y <- topLeft.y + 1 until botRight.y
-    } yield Coordinate(x, y)
+    } yield Point(x, y)
   }.toList
 
-  def outerCells: List[Coordinate] = {
+  def outerCells: List[Point] = {
     for {
       x <- topLeft.x to botRight.x
       y <- topLeft.y to botRight.y
-    } yield Coordinate(x, y)
+    } yield Point(x, y)
   }.toList
 
   def contains(other: Cell): Boolean =
     outerCells.exists(point => other.innerCells.contains(point))
 
-  def contains(other: Coordinate): Boolean =
+  def contains(other: Point): Boolean =
     outerCells.contains(other)
 
+  def fullyInsideOf(other: Cell): Boolean = {
+    outerCells.forall(p => other.contains(p))
+  }
 
   def merge(other: Cell): Cell = {
 
@@ -48,10 +74,15 @@ case class Cell(topLeft: Coordinate, botRight: Coordinate) {
     val topLeftY = min(topLeft.y, other.topLeft.y)
     val botRightX = max(botRight.x, other.botRight.x)
     val botRightY = max(botRight.y, other.botRight.y)
-    Cell(
-      Coordinate(topLeftX, topLeftY),
-      Coordinate(botRightX, botRightY)
-    )
+    Cell(topLeftX, topLeftY,botRightX, botRightY)
+  }
+
+  def area: Int = (botRight.x - topLeft.x) * (botRight.y - topLeft.y)
+
+  def compare(other: Cell): Cell = {
+    if(this.area > other.area) this
+    else if (other.area > this.area) other
+    else this
   }
 
   override def toString: String = " ("+ topLeft.x + "," + topLeft.y + ")-(" + botRight.x + "," + botRight.y + ") "
@@ -60,64 +91,21 @@ case class Cell(topLeft: Coordinate, botRight: Coordinate) {
 
 object Cell{
 
-  def up(cell: Cell): Cell = {
-    Cell(
-      Coordinate(cell.topLeft.x + 0, cell.topLeft.y - 1)
-      , Coordinate(cell.botRight.x + 0, cell.botRight.y - 1))
-  }
-
-  def down(cell: Cell): Cell = {
-    Cell(
-      Coordinate(cell.topLeft.x + 0, cell.topLeft.y + 1)
-      , Coordinate(cell.botRight.x + 0, cell.botRight.y + 1))
-  }
-
-  def left(cell: Cell): Cell = {
-    Cell(
-      Coordinate(cell.topLeft.x - 1, cell.topLeft.y + 0)
-      , Coordinate(cell.botRight.x - 1, cell.botRight.y + 0))
-  }
-
-  def right(cell: Cell): Cell = {
-    Cell(
-      Coordinate(cell.topLeft.x + 1, cell.topLeft.y + 0)
-      , Coordinate(cell.botRight.x + 1, cell.botRight.y + 0))
-  }
-
-  def realCell(cell: Cell): Boolean = {
-    (cell.botRight.x - cell.topLeft.x) == 3 && (cell.botRight.y - cell.topLeft.y) == 3
-  }
-
-  def nucleus(cell: Cell): Option[Coordinate] = {
-    if(realCell(cell)){
-      Some(Coordinate(cell.topLeft.x + 1, cell.topLeft.y + 1 ))
-    }
-    else{ None }
-  }
-
-  //  def drawCells: List[Coordinate] = {
-  //    for {
-  //      x <- topLeft.x until botRight.x
-  //      y <- topLeft.y until botRight.y
-  //    } yield Coordinate(x, y)
-  //  }.toList
-
-  //  def centerCell: Coordinate = {
-  //    Coordinate(topLeft.x + 1, topLeft.y + 1)
-  //  }
+  def apply(tlx: Int, tly: Int, brx: Int, bry: Int): Cell =
+    Cell(Point(tlx,tly),Point(brx,bry))
 
 
   import play.api.libs.json._
 
   implicit val cellFormats = Json.format[Cell]
 
-  def writeCell(cell: Cell): JsValue = {
+  def writeCell(cell: Cell): JsValue =
     Json.toJson(cell)
-  }
+
 
   def readCell(jsonCell: JsValue): Cell = {
-    val topLeft = (jsonCell \ "topLeft").as[Coordinate]
-    val botRight = (jsonCell \ "botRight").as[Coordinate]
+    val topLeft = (jsonCell \ "topLeft").as[Point]
+    val botRight = (jsonCell \ "botRight").as[Point]
     Cell(topLeft, botRight)
   }
 

@@ -10,11 +10,20 @@ case class Team(cells: List[Cell]) {
 
   def size = cells.size
 
-  def allPairs(n: Int): List[List[Cell]] = cells.combinations(n).toList
+  def allPairs(n: Int): List[List[Cell]] = cells combinations(n) toList
+
+  def contains(nucleus: Point): Boolean = {
+    cells.exists(_.nucleus.getOrElse("None") == nucleus)
+  }
 
 }
 
-object Team{
+object Team {
+
+  def apply(cell : Cell*): Team =
+    Team(cell.toList)
+
+  def nullTeam: Team = Team(List())
 
   import play.api.libs.json._
 
