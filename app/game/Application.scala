@@ -44,21 +44,21 @@ object Application extends App{
 //  Database.getBoard()
 
 
-  val cell1 = Cell(Point(0,0),Point(2,2))
-  val cell2 = Cell(Point(17,17),Point(19,19))
-  val cell3 = Cell(Point(7,7), Point(11,11))
-  val cell4 = Cell(Point(3,3), Point(6,6))
-  val cell5 = Cell(Point(2,2), Point(5,5))
-  val cell6 = Cell(Point(0,5), Point(3,8))
-
-  val list = List(cell1,cell2,cell3,cell4,cell5,cell6)
-
-  private def reduce(list: List[Cell]): Cell = {
-    list
-      .foldLeft(Cell(Point(0,0), Point(0,0)))
-      { (c1: Cell, c2: Cell) => c1 compare c2 }
-  }
-
-   println(reduce(list))
+//  val cell1 = Cell(Point(0,0),Point(2,2))
+//  val cell2 = Cell(Point(17,17),Point(19,19))
+//  val cell3 = Cell(Point(7,7), Point(11,11))
+//  val cell4 = Cell(Point(3,3), Point(6,6))
+//  val cell5 = Cell(Point(2,2), Point(5,5))
+//  val cell6 = Cell(Point(0,5), Point(3,8))
+//
+//  val list = List(cell1,cell2,cell3,cell4,cell5,cell6)
+//
+//  private def reduce(list: List[Cell]): Cell = {
+//    list
+//      .foldLeft(Cell(Point(0,0), Point(0,0)))
+//      { (c1: Cell, c2: Cell) => c1 compare c2 }
+//  }
+//
+//   println(reduce(list))
 
 }

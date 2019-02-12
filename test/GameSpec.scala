@@ -1,5 +1,5 @@
 import org.scalatestplus.play.PlaySpec
-import game.{Cell, Point, Team}
+import game._
 import model.Board
 import org.scalatest.{FlatSpec, PrivateMethodTester}
 
@@ -11,287 +11,262 @@ import scala.util.Success
   */
 class GameSpec extends PlaySpec with PrivateMethodTester {
 
-  val cell1 = Cell(0,0,2,2)
-  val cell2 = Cell(20,20,23,23)
-  val cell3 = Cell(7,7,10,10)
-  val cell4 = Cell(3,3,6,6)  // merge
-  val cell5 = Cell(2,2,5,5)  // merge
-  val cell6 = Cell(0,5,3,8)  // merge
+  val cell1 = RCell(0,0,3,3)
+  val cell2 = RCell(3,0,6,3)
+  val cell3 = RCell(2,3,5,6)
+  val cell4 = RCell(5,5,8,8)
+  val cell5 = RCell(2,7,5,10)
+  val cell6 = RCell(6,0,9,3)
+  val cell7 = RCell(9,2,12,5)
 
-  val cell7 = Cell(7,8,10,11)
+  val cell8 = RCell(9,9,12,12)
+  val cell9 = RCell(17,0,20,3)
+  val cell10 = RCell(17,6,20,9)
+  val cell11 = RCell(17,9,20,12)
+  val cell12 = RCell(17,12,20,15)
+  val cell13 = RCell(12,12,15,15)
+  val cell14 = RCell(15,15,18,18)
 
-  val team = Team(cell1,cell2,cell3,cell4,cell5,cell6)
-  val team2 = Team(cell7,cell7,cell7,cell7,cell7,cell7)
-  val board = Board(team, team2)
+  val team1 = Team(cell1,cell2,cell3,cell4,cell5,cell6, cell7)
+  val team2 = Team(cell8,cell9,cell10,cell11,cell12,cell13,cell14)
+  val board_t1 = Board(team1, team2)
 
+  val team3 = Team(cell3.right,cell1,cell2,cell4,cell5,cell6, cell7)
+  val team4 = Team(cell8,cell9,cell10,cell11,cell12,cell13,cell14)
+  val board_t2 = Board(Team(VCell(2,3,8,10) :: team3.cells), team4)
 
-  "real cells are like" should {
-    ""+cell4 in {
-      cell4.realCell mustEqual true
-    }
-    ""+cell5 in {
-      cell5.realCell mustEqual true
-    }
-    ""+cell6 in {
-      cell6.realCell mustEqual true
-    }
-  }
+  val team5 = Team(cell1,cell2,cell3.right,cell4,cell5.right,cell6, cell7)
+  val team6 = Team(cell8,cell9,cell10,cell11,cell12,cell13,cell14)
+  val board_t3 = Board(team5, team6)
 
+  val team7 = Team(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right, cell7)
+  val team8 = Team(cell8,cell9,cell10,cell11,cell12,cell13,cell14)
+  val board_t4 = Board(team7, team8)
 
-  "real cells are NOT like" should {
-    ""+cell1 in {
-      cell1.realCell mustEqual false
-    }
-  }
+  val team9 =  Team(team1.cells)
+  val team10 = Team(VCell(0,0,4,4) :: team1.cells)
+  val team11 = Team(VCell(0,0,4,4) :: VCell(4,4,8,8) :: team1.cells)
 
 
   "nucleus is" should {
-    Point(8,8) + " in " + cell3 in {
-      cell3.nucleus.getOrElse(None) mustEqual Point(8,8)
+    Point(1,1) + " in " + cell1 in {
+      cell1.nucleus mustEqual Point(1,1)
     }
-    Point(4,4) + " in " + cell4 in {
-      cell4.nucleus.getOrElse(None) mustEqual Point(4,4)
-    }
-  }
-
-
-  "nucleus doesn't exist for" should {
-    ""+cell1 in {
-      cell1.nucleus.getOrElse(None) mustEqual None
+    Point(4,1) + " in " + cell2 in {
+      cell2.nucleus mustEqual Point(4,1)
     }
   }
 
 
   "collision" should {
     val isCollision = PrivateMethod[Boolean]('isCollision)
-    "happens for " + cell5 + " and " + cell5 in {
-      board invokePrivate isCollision(cell5) mustEqual true
+    "happen for " + cell1 + " and " + cell1 in {
+      board_t1 invokePrivate isCollision(cell1) mustEqual true
     }
-    "doesn't happens for " + Cell(0,0,3,3) + " and " + cell1 in {
-      board invokePrivate isCollision(Cell(0,0,3,3)) mustEqual false
-    }
-    "doesn't happens for " + cell1 + " and " + cell1 in {
-      board invokePrivate isCollision(Cell(0,0,2,2)) mustEqual false
-    }
-    "doesn't happens for " + Cell(4,4,7,7) + " and " + cell4 in {
-      board invokePrivate isCollision(Cell(4,4,7,7)) mustEqual false
+    "NOT happen for " + cell1 + " and " + RCell(0,1,3,4) + " and " + cell2 in {
+      board_t1 invokePrivate isCollision(RCell(0,1,3,4)) mustEqual false
     }
   }
 
 
-  "allowable board values (of size " + board.dimensions + ")" should {
+  "allowable board values (of size " + board_t1.dimensions + ")" should {
     val onBoard = PrivateMethod[Boolean]('onBoard)
     "are not < than 0" in {
-      board invokePrivate onBoard(Cell(-1,-1,2,2)) mustBe false
+      board_t1 invokePrivate onBoard(RCell(-1,-1,2,2)) mustBe false
     }
     "are not >= than the board length" in {
-      board invokePrivate onBoard(Cell(0,board.dimensions+1,2,2)) mustBe false
+      board_t1 invokePrivate onBoard(VCell(0,board_t1.dimensions+1,3,2)) mustBe false
     }
     "are >= than 0 and < dimensions" in {
-      board invokePrivate onBoard(Cell(0,-0,3,3)) mustBe true
+      board_t1 invokePrivate onBoard(RCell(0,-0,3,3)) mustBe true
     }
   }
 
 
   "valid overlapping moves " should {
-    val teamOne = Team(Cell(0,1,3,4), Cell(0,4,3,7), cell2, cell3, cell2, cell3)
-    val teamTwo = Team.nullTeam
-    val board = Board(teamOne, teamTwo)
-    val down = PrivateMethod[Board]('down)
-    "of "+ Cell(0,1,3,4) + "down on " + Cell(0,4,3,7) +"are valid" in
-      { board invokePrivate down(Point(1,2)) mustEqual
-      Success(Board(Team(Cell(0,2,3,5), Cell(0,4,3,7),cell2,cell3,cell2,cell3),
-                    Team.nullTeam,
-                    Team(Cell(0,2,3,7))))}
+    val right = PrivateMethod[Board]('right)
+    "of "+ cell1 + "right on " + cell2 +"are valid" in
+      { board_t1 invokePrivate right(Point(1,1)) mustEqual
+      Success(Board(Team(VCell(1,0,6,3),RCell(1,0,4,3),cell2,cell3,cell4,cell5,cell6, cell7),
+                    Team(cell8,cell9,cell10,cell11,cell12,cell13,cell14)))}
   }
 
 
   "valid moves for " + cell1 should {
       val isValidCellState = PrivateMethod[Boolean]('isValidCellState)
-      "are not move up" in { board invokePrivate isValidCellState(cell1.up) mustBe false }
-      "are not move left" in { board invokePrivate isValidCellState(cell1.left) mustBe false }
-      "are move down" in  { board invokePrivate isValidCellState(cell1.down)  mustBe true }
-      "are move right" in { board invokePrivate isValidCellState(cell1.right) mustBe true }
+      "are not move up" in { board_t1 invokePrivate isValidCellState(cell1.up) mustBe false }
+      "are not move left" in { board_t1 invokePrivate isValidCellState(cell1.left) mustBe false }
+      "are move down" in  { board_t1 invokePrivate isValidCellState(cell1.down)  mustBe true }
+      "are move right" in { board_t1 invokePrivate isValidCellState(cell1.right) mustBe true }
     }
 
 
   "valid moves for " + cell2 should {
-    println(board.dimensions)
     val isValidCellState = PrivateMethod[Boolean]('isValidCellState)
-    "are not move up"    in { board invokePrivate isValidCellState(cell2.up) mustBe true }
-    "are not move left"  in { board invokePrivate isValidCellState(cell2.left) mustBe true }
-    "are move down"  in { board invokePrivate isValidCellState(cell2.down) mustBe false }
-    "are move right" in { board invokePrivate isValidCellState(cell2.right) mustBe false }
+    "are not move up"    in { board_t1 invokePrivate isValidCellState(cell2.up) mustBe false }
+    "are not move left"  in { board_t1 invokePrivate isValidCellState(cell2.left) mustBe true }
+    "are move down"  in { board_t1 invokePrivate isValidCellState(cell2.down) mustBe true }
+    "are move right" in { board_t1 invokePrivate isValidCellState(cell2.right) mustBe true }
   }
-
-
-  "valid moves for " + Cell(2,3,5,6) should {
-    val isValidCellState = PrivateMethod[Boolean]('isValidCellState)
-    "are not move right"    in { board invokePrivate isValidCellState(Cell(2,3,5,6).right) mustBe false }
-    "are not move left"  in { board invokePrivate isValidCellState(Cell(2,3,5,6).left) mustBe true }
-    "are move down"  in { board invokePrivate isValidCellState(Cell(2,3,5,6).down) mustBe true }
-    "are move up" in { board invokePrivate isValidCellState(Cell(2,3,5,6).up) mustBe false }
-  }
-
 
   "inner cells of" should {
-    cell4 + " are " + Cell(4,4,5,5) in {
-      Cell(3,3,6,6).innerCells mustEqual Cell(4,4,5,5).outerCells
+    cell1 + " are "  in {
+      cell1.innerPoints.toSet mustEqual List(Point(1,1),Point(2,1), Point(1,2), Point(2,2)).toSet
     }
-    Cell(3,3,9,9) + " are " + Cell(4,4,8,8) in {
-      Cell(3,3,9,9).innerCells mustEqual Cell(4,4,8,8).outerCells
+    VCell(3,3,9,9) + " are " + VCell(4,4,8,8) in {
+      VCell(3,3,9,9).innerPoints mustEqual VCell(4,4,8,8).allPoints
     }
-    Cell(0,0,9,3) + " are " + Cell(1,1,8,2) in {
-      Cell(0,0,9,3).innerCells mustEqual Cell(1,1,8,2).outerCells
+    VCell(9,9,3,3) + " are " + VCell(8,8,4,4) in {
+      VCell(9,9,3,3).innerPoints mustEqual VCell(8,8,4,4).allPoints
     }
   }
 
 
   "inner cells of" should {
-    cell4 + " are not " in {
-      Cell(3,3,6,6).innerCells == Cell(4,4,6,6).outerCells mustBe false
+    VCell(3,3,9,9) + " are not " + VCell(4,4,8,9) in {
+      VCell(3,3,9,9).innerPoints == VCell(4,4,8,9).allPoints mustBe false
     }
-    Cell(3,3,9,9) + " are not " + Cell(4,4,8,9) in {
-      Cell(3,3,9,9).innerCells == Cell(4,4,8,9).outerCells mustBe false
-    }
-    Cell(0,0,9,3) + " are not " + Cell(1,1,9,2) in {
-      Cell(0,0,9,3).innerCells == Cell(1,1,9,2).outerCells mustBe false
+    VCell(0,0,9,4) + " are not " + VCell(1,1,9,4) in {
+      VCell(0,0,9,4).innerPoints == VCell(1,1,9,4).allPoints mustBe false
     }
   }
 
 
-  cell4 + " doesn't contain" should {
-    "" + Cell(0,0,3,3) in {
-      cell4 contains Cell(0,0,3,3) mustBe false
+  cell3 + " doesn't contain" should {
+    "" + RCell(0,0,3,3) in {
+      cell3 contains RCell(0,0,3,3) mustBe false
     }
-    "" + Cell(3,0,6,3) in {
-      cell4 contains Cell(3,0,6,3) mustBe false
+    "" + RCell(3,0,6,3) in {
+      cell3 contains RCell(3,0,6,3) mustBe false
     }
-    "" + Cell(6,0,9,3) in {
-      cell4 contains Cell(6,0,9,3) mustBe false
+    "" + RCell(6,0,9,3) in {
+      cell3 contains RCell(6,0,9,3) mustBe false
     }
-    "" + Cell(0,3,3,6) in {
-      cell4 contains Cell(0,3,3,6) mustBe false
+    "" + RCell(6,3,9,6) in {
+      cell3 contains RCell(6,3,9,6) mustBe false
     }
-    "" + Cell(6,3,9,6) in {
-      cell4 contains Cell(6,3,9,6) mustBe false
+    "" + RCell(0,6,3,9) in {
+      cell3 contains RCell(0,6,3,9) mustBe false
     }
-    "" + Cell(0,6,3,9) in {
-      cell4 contains Cell(0,6,3,9) mustBe false
+    "" + RCell(3,6,6,9) in {
+      cell3 contains RCell(3,6,6,9) mustBe false
     }
-    "" + Cell(3,6,6,9) in {
-      cell4 contains Cell(3,6,6,9) mustBe false
-    }
-    "" + Cell(6,6,9,9) in {
-      cell4 contains Cell(6,6,9,9) mustBe false
+    "" + RCell(6,6,9,9) in {
+      cell3 contains RCell(6,6,9,9) mustBe false
     }
   }
 
 
-  cell4 + "does contain " should {
-    "" + Cell(1,1,4,4) in {
-      cell4 contains Cell(1,1,4,4) mustBe true
+  cell3 + "does contain " should {
+    "" + RCell(1,1,4,4) in {
+      cell3 contains RCell(1,1,4,4) mustBe true
     }
     "and in reverse 1" in {
-      Cell(1,1,4,4) contains cell4 mustBe true
+      RCell(1,1,4,4) contains cell3 mustBe true
     }
-    "" + Cell(2,1,5,4) in {
-      cell4 contains Cell(2,1,5,4) mustBe true
+    "" + RCell(2,1,5,4) in {
+      cell3 contains RCell(2,1,5,4) mustBe true
     }
     "and in reverse 2" in {
-      Cell(2,1,5,4) contains cell4 mustBe true
+      RCell(2,1,5,4) contains cell3 mustBe true
     }
-    "" + Cell(3,3,9,9) in {
-      cell4 contains Cell(3,3,9,9) mustBe true
+    "" + VCell(3,3,9,9) in {
+      cell3 contains VCell(3,3,9,9) mustBe true
     }
     "and in reverse 3" in {
-      Cell(3,3,9,9) contains cell4 mustBe true
+      VCell(3,3,9,9) contains cell3 mustBe true
     }
-    "" + Cell(5,5,8,8) in {
-      cell4 contains Cell(5,5,8,8) mustBe true
-    }
-    "and in reverse 4" in {
-      Cell(5,5,8,8) contains cell4 mustBe true
-    }
-    "" + Cell(3,4,6,7) in {
-      cell4 contains Cell(3,4,6,7) mustBe true
+    "" + RCell(3,4,6,7) in {
+      cell3 contains RCell(3,4,6,7) mustBe true
     }
     "and in reverse 5" in {
-     Cell(3,4,6,7) contains  cell4 mustBe true
+      RCell(3,4,6,7) contains  cell3 mustBe true
     }
   }
 
 
   "merging" should {
-    cell4 + "merge " + Cell(0,0,6,6) + " is None" in {
-      cell4 merge Cell(0,0,6,6)  mustBe  Cell(0,0,6,6) }
+    cell1 + "merge " + RCell(0,1,3,4) + " is " + VCell(0,0,3,4) in {
+      cell1 merge RCell(0,1,3,4)  mustBe VCell(0,0,3,4) }
 
-    cell4 + " merge " + cell5 + " is " + Cell(2,2,6,6) in {
-      cell4 merge cell5 mustEqual Cell(2,2,6,6)  }
+    cell1 + " merge " + RCell(2,2,5,5) + " is " + VCell(0,0,5,5) in {
+      cell1 merge RCell(2,2,5,5) mustEqual VCell(0,0,5,5)  }
 
-    cell4  + " merge " + cell5 + " is " + Cell(2,0,6,6) in {
-      cell4 merge Cell(2,0,5,3) mustEqual Cell(2,0,6,6)  }
+    cell1  + " merge " + RCell(2,0,5,3) + " merge " + RCell(4,1,7,4) + " is " + VCell(0,0,7,4) in {
+      cell1 merge RCell(2,0,5,3) merge RCell(4,1,7,4) mustEqual VCell(0,0,7,4)  }
 
-    cell4 + " merge " + cell5 + " merge " + Cell(4,0,7,3) + " is " + Cell(2,0,7,6) in {
-      cell4 merge cell5 merge Cell(4,0,7,3) mustEqual Cell(2,0,7,6)
+  }
+
+
+  "replaceHead" should {
+    val replaceHead = PrivateMethod[List[Cell]]('replaceHead)
+    " r r xs" in {
+      board_t1 invokePrivate replaceHead(team9.cells) mustEqual team9.cells
+    }
+    "v r xs" in {
+      board_t1 invokePrivate replaceHead(team10.cells) mustEqual team10.cells
+    }
+    "v v xs" in {
+      board_t1 invokePrivate replaceHead(team11.cells) mustEqual VCell(0,0,4,4) :: team1.cells
+    }
+  }
+
+  "getTeamHead" should {
+    val getTeamHead = PrivateMethod[List[Cell]]('getTeamHead)
+    "should give None for time 1" in {
+      board_t1 invokePrivate getTeamHead(board_t1, 1) mustEqual None
+    }
+    "should give None for time 2" in {
+      board_t2 invokePrivate getTeamHead(board_t2, 1) mustEqual None
     }
   }
 
 
-  "merging teams" should {
-    val merge = PrivateMethod[List[Cell]]('merge)
-    "should give correct new team" in {
-      board invokePrivate merge(board) mustEqual  List(Cell(7,7,10,11),Cell(2,2,6,6))
+  "recMerge" should {
+    "at time 1" in {
+      board_t1 recMerge(board_t1, 1) mustEqual board_t1
     }
-  }
-
-
-  "recursively merging teams" should {
-    "should give correct new team" in {
-      board.recMerge(board) mustEqual Board(team, team2, Team(Cell(7,7,10,11),Cell(0,2,6,8)))
+    "at time 2" in {
+      board_t2 recMerge(board_t2, 1) mustEqual Board(Team(VCell(2,3,8,10) :: team3.cells), team4)
     }
   }
 
 
   cell3 + " moved down is" should {
-    "" + cell7 in {
-      Board(team, Team.nullTeam).down(Point(8,8)) mustEqual
-        Success(Board(Team(cell7,cell1,cell2,cell4,cell5,cell6),
-                      Team.nullTeam,
-                      Team(Cell(0,2,6,8))))
+    "" + RCell(2,4,5,7) in {
+      board_t1.down(Point(3,4)) mustEqual
+        Success(Board(Team(RCell(2,4,5,7),cell1,cell2,cell4,cell5,cell6, cell7),
+                      Team(cell8, cell9,cell10,cell11,cell12,cell13,cell14)))
     }
   }
 
 
-  val cell8 = Cell(7,6,10,9)
+  val cell15 = RCell(2,2,5,5)
   "" + cell3 + " moved up is" should {
-    "" + cell8 in {
-      Board(Team(cell1,cell2,cell3,cell4,cell5,cell6), Team.nullTeam).up(Point(8,8)) mustEqual
-        Success(Board(Team(cell8,cell1,cell2,cell4,cell5,cell6),
-                      Team.nullTeam,
-                      Team(Cell(0,2,6,8))))
+    "" + cell15 in {
+      board_t1.up(Point(3,4)) mustEqual
+        Success(Board(Team(VCell(0,0,6,5),cell15,cell1,cell2,cell4,cell5,cell6,cell7),
+                      Team(cell8,cell9,cell10,cell11,cell12,cell13,cell14)))
     }
   }
 
 
-  val cell9 = Cell(6,7,9,10)
+  val cell16 = RCell(1,3,4,6)
   cell3 + " moved left is" should {
-    "" + cell9 in {
-      Board(Team(cell1,cell2,cell3,cell4,cell5,cell6), Team.nullTeam).left(Point(8,8)) mustEqual
-        Success(Board(Team(cell9,cell1,cell2,cell4,cell5,cell6),
-                      Team.nullTeam,
-                      Team(Cell(0,2,6,8))))
+    "" + cell16 in {
+      board_t1.left(Point(3,4)) mustEqual
+        Success(Board(Team(cell16,cell1,cell2,cell4,cell5,cell6,cell7),
+                      Team(cell8,cell9,cell10,cell11,cell12,cell13,cell14)))
     }
   }
 
 
-  val cell10 = Cell(8,7,11,10)
+  val cell17 = RCell(3,3,6,6)
   cell3 + " moved right is" should {
-    "" + cell10 in {
-      Board(Team(cell1,cell2,cell3,cell4,cell5,cell6), Team.nullTeam).right(Point(8,8)) mustEqual
-        Success(Board(Team(cell10,cell1,cell2,cell4,cell5,cell6),
-                      Team.nullTeam,
-                      Team(Cell(0,2,6,8))))
+    "" + cell17 in {
+      board_t1.right(Point(3,4)) mustEqual
+        Success(Board(Team(VCell(2,3,8,10),cell17,cell1,cell2,cell4,cell5,cell6,cell7),
+                      Team(cell8,cell9,cell10,cell11,cell12,cell13,cell14)))
     }
   }
 

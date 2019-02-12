@@ -5,7 +5,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, Controller}
 import services.Counter
 import com.google.gson.Gson
-import game.{Cell, Point, Point$, Team}
+import game.{Cell, Point, RCell, Team}
 import model.{Board, BoardWrapper, Database, Move}
 import play.api.libs.json.{JsObject, JsValue, Json, Reads}
 
@@ -28,7 +28,7 @@ class GameController  @Inject() extends Controller {
 
       val team = for {
         y <- 0 until (teamSize * 4) by 4
-      } yield Cell(Point(x, y), Point(x + 3, y + 3))
+      } yield RCell(x, y, x + 3, y + 3)
 
       Team(team.toList)
 
@@ -46,7 +46,8 @@ class GameController  @Inject() extends Controller {
 
     val boardWrapper = BoardWrapper(board, 0, 0, "down")
 
-    Ok(BoardWrapper.writeBoard(boardWrapper))
+    //Ok(BoardWrapper.writeBoard(boardWrapper))
+    Ok("hello")
 
   }
 
@@ -67,7 +68,8 @@ class GameController  @Inject() extends Controller {
           case Success(v) =>
             Database.addBoard(v)
             val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
-            Ok(Json.toJson(boardWrapperResult))
+            //Ok(Json.toJson(boardWrapperResult))
+            Ok("hello")
           case Failure(e) =>
             Ok("INVALID MOVE: " + e)
         }
@@ -79,7 +81,8 @@ class GameController  @Inject() extends Controller {
           case Success(v) =>
             Database.addBoard(v)
             val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
-            Ok(Json.toJson(boardWrapperResult))
+            //Ok(Json.toJson(boardWrapperResult))
+            Ok("hello")
           case Failure(e) =>
             Ok("INVALID MOVE: " + e)
         }
@@ -90,7 +93,8 @@ class GameController  @Inject() extends Controller {
           case Success(v) =>
             Database.addBoard(v)
             val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
-            Ok(Json.toJson(boardWrapperResult))
+            //Ok(Json.toJson(boardWrapperResult))
+            Ok("hello")
           case Failure(e) =>
             Ok("INVALID MOVE: " + e)
         }
@@ -101,7 +105,8 @@ class GameController  @Inject() extends Controller {
           case Success(v) =>
             Database.addBoard(v)
             val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
-            Ok(Json.toJson(boardWrapperResult))
+            //Ok(Json.toJson(boardWrapperResult))
+            Ok("hello")
           case Failure(e) =>
             Ok("INVALID MOVE: " + e)
         }

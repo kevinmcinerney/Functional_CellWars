@@ -14,7 +14,6 @@ object Database {
   }
 
   def getBoard(): Board = {
-    database.foreach(println)
     database.remove(0)
   }
 

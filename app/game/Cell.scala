@@ -2,82 +2,62 @@ package game
 
 import breeze.linalg.{max, min}
 import breeze.math.MutablizingAdaptor.CoordinateFieldAdaptor
+import breeze.numerics.abs
+import model.Board
+import play.api.libs.json._
+
+import scala.util.{Success, Try}
 
 
 /**
   * Created by kevin on 29/04/17.
   */
-case class Cell(topLeft: Point, botRight: Point){
 
-  def up: Cell = {
-    Cell(
-      Point(topLeft.x + 0, topLeft.y - 1)
-      , Point(botRight.x + 0, botRight.y - 1))
-}
-  
-  def down: Cell = {
-    Cell(
-      Point(topLeft.x + 0, topLeft.y + 1)
-      , Point(botRight.x + 0, botRight.y + 1))
-  }
+sealed trait Cell {
 
-  def left: Cell = {
-    Cell(
-      Point(topLeft.x - 1, topLeft.y + 0)
-      , Point(botRight.x - 1, botRight.y + 0))
-  }
+  def x1: Int
+  def y1: Int
+  def x2: Int
+  def y2: Int
 
-  def right: Cell = {
-    Cell(
-      Point(topLeft.x + 1, topLeft.y + 0)
-      , Point(botRight.x + 1, botRight.y + 0))
-  }
 
-  def realCell: Boolean = {
-    (botRight.x - topLeft.x) == 3 && (botRight.y - topLeft.y) == 3
-  }
-
-  def nucleus: Option[Point] = {
-    if(realCell){
-      Some(Point(topLeft.x + 1, topLeft.y + 1 ))
-    }
-    else{ None }
-  }
-
-  def innerCells: List[Point] = {
+  def innerPoints: List[Point] = {
     for {
-      x <- topLeft.x + 1 until botRight.x
-      y <- topLeft.y + 1 until botRight.y
+      x <- x1 + 1 until x2
+      y <- y1 + 1 until y2
     } yield Point(x, y)
   }.toList
 
-  def outerCells: List[Point] = {
+  def allPoints: List[Point] = {
     for {
-      x <- topLeft.x to botRight.x
-      y <- topLeft.y to botRight.y
+      x <- x1 to x2
+      y <- y1 to y2
     } yield Point(x, y)
   }.toList
 
   def contains(other: Cell): Boolean =
-    outerCells.exists(point => other.innerCells.contains(point))
+    this != other &&
+    allPoints.exists(point => other.innerPoints.contains(point))
 
-  def contains(other: Point): Boolean =
-    outerCells.contains(other)
+  def contains(other: Point): Boolean = {
+    allPoints.contains(other)
+  }
 
   def fullyInsideOf(other: Cell): Boolean = {
-    outerCells.forall(p => other.contains(p))
+    this != other &&
+    allPoints.forall(p => other.contains(p))
   }
 
-  def merge(other: Cell): Cell = {
-
-    val topLeftX = min(topLeft.x, other.topLeft.x)
-    val topLeftY = min(topLeft.y, other.topLeft.y)
-    val botRightX = max(botRight.x, other.botRight.x)
-    val botRightY = max(botRight.y, other.botRight.y)
-    Cell(topLeftX, topLeftY,botRightX, botRightY)
+  def merge(other: Cell): VCell = {
+    assert(this contains  other, "Shouldn't be merged")
+    val topLeftX = min(x1, other.x1)
+    val topLeftY = min(y1, other.y1)
+    val botRightX = max(x2, other.x2)
+    val botRightY = max(y2, other.y2)
+    VCell(topLeftX, topLeftY,botRightX, botRightY)
   }
 
-  def area: Int = (botRight.x - topLeft.x) * (botRight.y - topLeft.y)
+  def area: Int = abs(x2 - x1) * abs(y2 - y1)
 
   def compare(other: Cell): Cell = {
     if(this.area > other.area) this
@@ -85,29 +65,114 @@ case class Cell(topLeft: Point, botRight: Point){
     else this
   }
 
-  override def toString: String = " ("+ topLeft.x + "," + topLeft.y + ")-(" + botRight.x + "," + botRight.y + ") "
+  override def toString: String = " ("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") "
+}
+
+sealed trait Movable {
+
+  def x1: Int
+  def y1: Int
+  def x2: Int
+  def y2: Int
+
+  def up: RCell = {
+    RCell(x1 + 0, y1 - 1, x2 + 0, y2 - 1)
+  }
+
+  def down: RCell = {
+    RCell(x1 + 0, y1 + 1, x2 + 0, y2 + 1)
+  }
+
+  def left: RCell = {
+    RCell(x1 - 1, y1 + 0, x2 - 1, y2 + 0)
+  }
+
+  def right: RCell = {
+    RCell(x1 + 1, y1 + 0, x2 + 1, y2 + 0)
+  }
+
+  def nucleus: Point = {
+    Point(x1 + 1, y1 + 1)
+  }
+}
+
+
+case class RCell(x1: Int, y1: Int,x2: Int, y2: Int) extends Cell with Movable {
+
+  require(abs(x1 - x2) == 3 && abs(y1 - y2) == 3, "Not a real cell")
+
+  override def toString: String = "r("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") "
+
+//  implicit object RCellFormat extends Format[RCell] {
+//
+//    def reads(json: JsValue): RCell = RCell(
+//      (json \ "x1").as[Int],
+//      (json \ "y1").as[Int],
+//      (json \ "x2").as[Int],
+//      (json \ "y2").as[Int]
+//    )
+//
+//    def writes(s: RCell): JsValue = JsObject(Seq(
+//      "x1" -> JsNumber(s.x1),
+//      "y1" -> JsNumber(s.y1),
+//      "x2" -> JsNumber(s.x2),
+//      "y2" -> JsNumber(s.y2)
+//    ))
+//  }
+}
+
+case class VCell(x1: Int, y1: Int,x2: Int, y2: Int) extends Cell {
+
+  require((abs(x1 - x2) >= 3 && abs(y1 - y2) >= 3) && area != 9, "Not a virtual cell")
+
+  override def toString: String = "v("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") "
+
+//  implicit object VCellFormat extends Format[VCell] {
+//
+//    def reads(json: JsValue): VCell = VCell(
+//      (json \ "x1").as[Int],
+//      (json \ "y1").as[Int],
+//      (json \ "x2").as[Int],
+//      (json \ "y2").as[Int]
+//    )
+//
+//    def writes(s: VCell): JsValue = JsObject(Seq(
+//      "x1" -> JsNumber(s.x1),
+//      "y1" -> JsNumber(s.y1),
+//      "x2" -> JsNumber(s.x2),
+//      "y2" -> JsNumber(s.y2)
+//    ))
+//  }
 
 }
 
-object Cell{
+//import play.api.libs.json._
+//import play.api.libs.functional.syntax._
+//
+//object Cell {
+//
+//  implicit val readCell =
+//    __.read[RCell].map(x => x:Cell) orElse __.read[VCell].map(x => x:Cell)
+//
+//  implicit val writeCell = Writes[Cell]{
+//    case r: RCell => RCell().RCellFormat.reads(r)
+//    case v: VCell => VCell.writeVCell.writes(v)
+//  }
+//}
 
-  def apply(tlx: Int, tly: Int, brx: Int, bry: Int): Cell =
-    Cell(Point(tlx,tly),Point(brx,bry))
 
+object RCell {
 
-  import play.api.libs.json._
+//  implicit val readRCell = Json.reads[RCell]
+//
+//  val writeRCell = Json.writes[RCell]
 
-  implicit val cellFormats = Json.format[Cell]
+}
 
-  def writeCell(cell: Cell): JsValue =
-    Json.toJson(cell)
+object VCell {
 
-
-  def readCell(jsonCell: JsValue): Cell = {
-    val topLeft = (jsonCell \ "topLeft").as[Point]
-    val botRight = (jsonCell \ "botRight").as[Point]
-    Cell(topLeft, botRight)
-  }
-
+//  implicit val readVCell = Json.reads[VCell]
+//
+//  val writeVCell = Json.writes[VCell]
 
 }

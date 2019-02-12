@@ -12,8 +12,16 @@ case class Team(cells: List[Cell]) {
 
   def allPairs(n: Int): List[List[Cell]] = cells combinations(n) toList
 
+  def realCells: List[RCell] = {
+    cells.collect { case a: RCell => a }
+  }
+
+  def virtualCells: List[VCell] = {
+    cells.collect { case a: VCell => a }
+  }
+
   def contains(nucleus: Point): Boolean = {
-    cells.exists(_.nucleus.getOrElse("None") == nucleus)
+    realCells.exists(_.nucleus == nucleus)
   }
 
 }
@@ -25,16 +33,16 @@ object Team {
 
   def nullTeam: Team = Team(List())
 
-  import play.api.libs.json._
-
-  implicit val teamFormats = Json.format[Team]
-
-  def writeTeam(team: Team): JsValue = {
-    Json.toJson(team)
-  }
-
-  def readTeam(jsonTeam: JsValue): Team = {
-    val cells = (jsonTeam \ "cells").as[List[Cell]]
-    Team(cells)
-  }
+//  import play.api.libs.json._
+//
+//  implicit val teamFormats = Json.format[Team]
+//
+//  def writeTeam(team: Team): JsValue = {
+//    Json.toJson(team)
+//  }
+//
+//  def readTeam(jsonTeam: JsValue): Team = {
+//    val cells = (jsonTeam \ "cells").as[List[Cell]]
+//    Team(cells)
+//  }
 }

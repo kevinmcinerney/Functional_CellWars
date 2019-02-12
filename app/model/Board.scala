@@ -1,9 +1,10 @@
 package model
 
 import com.google.gson.Gson
-import game.{Cell, Point, Team}
+import game._
 
-import scala.util.Try
+import scala.None
+import scala.util.{Try}
 
 /**
   * Created by kevin on 29/01/19.
@@ -11,7 +12,7 @@ import scala.util.Try
 
 class BadMoveException(msg: String) extends Exception(msg)
 
-case class Board(teamOne: Team, teamTwo: Team, merged: Team = Team.nullTeam){
+case class Board(teamOne: Team, teamTwo: Team){
 
 
   def dimensions: Int = {
@@ -34,6 +35,18 @@ case class Board(teamOne: Team, teamTwo: Team, merged: Team = Team.nullTeam){
     move(right)(point)
   }
 
+  def recMerge(board: Board, mover: Int): Board = {
+    getTeamHead(board, mover) match {
+      case Some(head) if mover == 1 =>
+        recMerge(Board(Team(replaceHead(head :: board.teamOne.cells)),
+                       Team(board.teamTwo.cells)), mover)
+      case Some(head) if mover == 2 =>
+        recMerge(Board(Team(board.teamOne.cells),
+                       Team(replaceHead(head :: board.teamTwo.cells))), mover)
+      case None => board
+    }
+  }
+
   private def up(team: Team, nucleus: Point): Team = {
     move(_.up, team, nucleus)
   }
@@ -47,108 +60,136 @@ case class Board(teamOne: Team, teamTwo: Team, merged: Team = Team.nullTeam){
   }
 
   private def left(team: Team, nucleus: Point): Team = {
-      move(_.left, team, nucleus)
+    move(_.left, team, nucleus)
+  }
+  private  def getTeam(board: Board, team: Int): Team ={
+    if (team == 1) board.teamOne else board.teamTwo
   }
 
   private def move(move: (Team, Point) => Team)(nucleus: Point): Try[Board] = {
-
     if (teamOne.contains(nucleus))
-      Try(recMerge(Board(move(teamOne, nucleus), teamTwo)))
+      Try(recMerge(Board(move(teamOne, nucleus), teamTwo),1))
     else if (teamTwo.contains(nucleus))
-      Try(recMerge(Board(teamOne, move(teamTwo, nucleus))))
+      Try(recMerge(Board(teamOne, move(teamTwo, nucleus)),2))
     else
-      Try(recMerge(Board(teamOne, teamTwo)))
-
+      Try(Board(teamOne, teamTwo))
   }
 
-  private def move(move: Cell => Cell, team: Team, nucleus: Point): Team = {
-
-    val (mover, others) = team.cells.partition(_.nucleus == Some(nucleus))
-
-    val newCell = move(mover.head)
-
+  private def move(move: RCell => RCell, team: Team, nucleus: Point): Team = {
+    val (mover, tail) = team.realCells.partition(_.nucleus == nucleus)
+    val head = move(mover.head)
     if(mover.nonEmpty)
-      if(isValidCellState(newCell)) Team(newCell :: others)
+      if(isValidCellState(head)) Team(head :: tail)
       else throw new BadMoveException("Invalid move from this position")
     else throw new BadMoveException("You didn't select a cell to move")
-
   }
 
-
   private def onBoard(cell: Cell): Boolean = {
-
     val inRange = (i: Int) => i >= 0 && i < dimensions
-
-    inRange(cell.topLeft.x) && inRange(cell.botRight.x) &&
-      inRange(cell.topLeft.y) && inRange(cell.botRight.y)
-
+    inRange(cell.x1) && inRange(cell.x2) &&
+      inRange(cell.y1) && inRange(cell.y2)
   }
 
   private def isValidCellState(cell: Cell): Boolean = {
-    onBoard(cell) &&
-    !isCollision(cell)
-
+    onBoard(cell) && !isCollision(cell)
   }
 
   private def isCollision(cell: Cell): Boolean = {
-    allCells(this).exists(c => c.realCell && c == cell)
+    allRealCells(this).contains(cell)
   }
 
-  private def allCells(board: Board): List[Cell] = board.teamOne.cells ::: board.teamTwo.cells ::: board.merged.cells
+  private def allCells(board: Board): List[Cell] = {
+    board.teamOne.cells ::: board.teamTwo.cells
+  }
 
-  def recMerge(board: Board): Board = {
+  private def allRealCells(board: Board): List[RCell] = {
+    allCells(board).collect { case a: RCell => a }
+  }
 
-    val mergedCells = merge(board) // cache
+  private def allVirtualCells(board: Board): List[VCell] = {
+    allCells(board).collect { case a: VCell => a }
+  }
 
-    println(mergedCells.nonEmpty)
-    if (mergedCells.nonEmpty) {
-
-      recMerge(Board(Team(board.teamOne.cells),
-                     Team(board.teamTwo.cells),
-                     Team(mergedCells)))
+  private def getTeamHead(board: Board, mover: Int): Option[VCell] = {
+    getCellTuple(board, mover) match {
+      case Right(tuple) => Some(mergeCellPair(tuple))
+      case Left(msg) => None
     }
-    else board
   }
 
-  private def unmergedCells(board: Board): List[Cell] = {
-    allCells(board)
-      .filterNot(c1 => board.merged.cells
-        .exists(c2  => c1.fullyInsideOf(c2))) :::
-      board.merged.cells
+  /* New implementation O(n+1)^2 instead of 0(mn)^2 */
+  private def getCellTuple(board: Board, mover: Int): Either[String, (Cell, Cell)] = {
+    val team = getTeam(board, mover)
+    val canMergeCells = outerCells(board, team.cells.head)
+    val canMergePairs = canMergeCells.map(c => (canMergeCells.head, c))
+      .filter(p => p._1 contains p._2)
+
+    assert(canMergePairs.size <= 2, "Outer cells should only find a max of two merges at a time")
+
+    canMergePairs match {
+      case x :: y :: Nil => Right(mergeCellPair(x), mergeCellPair(y))
+      case x :: Nil => Right(x)
+      case Nil => Left("No merge pair found")
+    }
   }
 
-
-  private def merge(board: Board): List[Cell] = {
-    mergeCellPairs(findMergePairs(board))
+  private def outerCells(board: Board, mover: Cell): List[Cell] = {
+    reduce(mover :: allCells(board), allVirtualCells(board))
   }
 
-  private def findMergePairs(board: Board): List[List[Cell]] = {
-    unmergedCells(board)
-      .combinations(2)
-      .filter(pair => (pair.head contains pair.tail.head)
-                   && (pair.head != pair.tail.head)).toList
+  private def mergeCellPair(cellPair: (Cell,Cell)): VCell = {
+    cellPair._1 merge cellPair._2
   }
 
-  private def mergeCellPairs(cellPairs: List[List[Cell]]): List[Cell] = {
-    cellPairs.map(pair => pair.head merge pair.last)
+  private def replaceHead(cells: List[Cell]): List[Cell] = cells match {
+    case (x: RCell) :: (y: RCell) :: xs => x :: y :: xs
+    case (x: VCell) :: (y: RCell) :: xs => x :: y :: xs
+    case (x: VCell) :: (y: VCell) :: xs => x :: xs
+  }
+
+  private def reduce(l1: List[Cell], l2: List[Cell]): List[Cell] = {
+    l1.filter(c1 => l2.forall(c2 => !(c1 fullyInsideOf c2)))
+  }
+
+  private def to2DArray(mover: Int): Array[Array[Int]] = {
+    val matrix = Array.fill[Int](dimensions,dimensions) { 0 }
+
+    def addTeam(team: Team, id: Int): Unit ={
+      for{ c <- team.cells
+           p <- c.allPoints
+      } matrix(p.x)(p.y) = id
+    }
+
+    def addNucleus(team: Team, id: Int): Unit ={
+      for{ c <- team.realCells } matrix(c.x1 + 1)(c.y1 + 1) = id * 10
+    }
+
+    addTeam(teamOne, 1)
+    addNucleus(teamOne, 1)
+
+    addTeam(teamOne, 2)
+    addNucleus(teamOne, 2)
+
+    matrix
+
   }
 
 }
 
 object Board {
 
-  import play.api.libs.json._
-
-  implicit val boardFormats = Json.format[Board]
-
-  def writeBoard(board: Board): JsValue = {
-    Json.toJson(board)
-  }
-
-  def readBoard(jsonBoard: JsValue): Board = {
-    val teamOne = (jsonBoard \ "teamOne").as[Team]
-    val teamTwo = (jsonBoard \ "teamTwo").as[Team]
-    Board(teamOne, teamTwo)
-  }
+//  import play.api.libs.json._
+//
+//  implicit val boardFormats = Json.format[Board]
+//
+//  def writeBoard(board: Board): JsValue = {
+//    Json.toJson(board)
+//  }
+//
+//  def readBoard(jsonBoard: JsValue): Board = {
+//    val teamOne = (jsonBoard \ "teamOne").as[Team]
+//    val teamTwo = (jsonBoard \ "teamTwo").as[Team]
+//    Board(teamOne, teamTwo)
+//  }
 
 }
