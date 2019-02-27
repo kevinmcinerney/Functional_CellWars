@@ -1,6 +1,6 @@
 package model
 
-import game.Team
+//import game.Team
 
 /**
   * Created by kevin on 31/01/19.
@@ -8,7 +8,7 @@ import game.Team
 case class Move(x: Int, y: Int, move: String)
 
 
-object Move{
+object Move {
 
   import play.api.libs.json._
 

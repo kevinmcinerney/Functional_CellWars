@@ -1,11 +1,11 @@
-package game
-import controllers.GameController
-import model.{Board, Database}
-
-/**
-  * Created by kevin on 26/01/19.
-  */
-object Application extends App{
+//package game
+//import controllers.GameController
+//import model.{Board, Database}
+//
+///**
+//  * Created by kevin on 26/01/19.
+//  */
+//object Application extends App{
 
 //  def loadTeam(x: Int, teamSize: Int): Team = {
 //
@@ -61,4 +61,4 @@ object Application extends App{
 //
 //   println(reduce(list))
 
-}
+//}

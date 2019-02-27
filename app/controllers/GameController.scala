@@ -3,12 +3,13 @@ package controllers
 import javax.inject.{Inject, Singleton}
 
 import play.api.mvc.{Action, Controller}
-import services.Counter
-import com.google.gson.Gson
-import game.{Cell, Point, RCell, Team}
-import model.{Board, BoardWrapper, Database, Move}
-import play.api.libs.json.{JsObject, JsValue, Json, Reads}
 
+import com.google.gson.Gson
+import game.{ Point, RCell}
+import model.{Board, Database, Move}
+import play.api.libs.json.{Json}
+
+import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success}
 
 /**
@@ -17,38 +18,33 @@ import scala.util.{Failure, Success}
 @Singleton
 class GameController  @Inject() extends Controller {
 
-  /**
-   fillllllll
-    */
-  def game = Action { Ok(views.html.game("This is your game")) }
-
   def startPositions(size: Int) = Action {
 
-    def loadTeam(x: Int, teamSize: Int): Team = {
+    def loadCells(x: Int, teamSize: Int, marker: Int): ListBuffer[RCell] = {
 
-      val team = for {
+      for {
         y <- 0 until (teamSize * 4) by 4
-      } yield RCell(x, y, x + 3, y + 3)
+      } yield RCell(x, y, x + 3, y + 3, marker)
 
-      Team(team.toList)
-
-    }
+    }.to[ListBuffer]
 
     val numPerTeam = size / 4
 
-    val teamOne = loadTeam(0, numPerTeam)
+    val teamOne = loadCells(0, numPerTeam, 1) += RCell(34,2,37,5,1)
 
-    val teamTwo = loadTeam(size - 3, numPerTeam)
+    val teamTwo = loadCells(size - 3, numPerTeam, 2)
 
-    val board = Board(teamOne, teamTwo)
+    val rCells = teamOne ++ teamTwo
+
+    val emptyAdj = Array.fill[Array[Int]](rCells.length)(Array.fill[Int](rCells.length)(0))
+
+    val board = Board(rCells, ListBuffer(), emptyAdj)
 
     Database.addBoard(board)
 
-    val boardWrapper = BoardWrapper(board, 0, 0, "down")
+    val g = new Gson()
 
-    //Ok(BoardWrapper.writeBoard(boardWrapper))
-    Ok("hello")
-
+    Ok(g.toJson(board.to2DArray()))
   }
 
   def move() = Action {
@@ -62,15 +58,16 @@ class GameController  @Inject() extends Controller {
 
       val direction = move.move
 
+      val g = new Gson()
+
       if (direction == "up") {
 
         board.up(movePoint) match {
           case Success(v) =>
             Database.addBoard(v)
-            val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
-            //Ok(Json.toJson(boardWrapperResult))
-            Ok("hello")
+            Ok(g.toJson(v.to2DArray()))
           case Failure(e) =>
+            Database.addBoard(board)
             Ok("INVALID MOVE: " + e)
         }
 
@@ -80,10 +77,9 @@ class GameController  @Inject() extends Controller {
         board.down(movePoint) match {
           case Success(v) =>
             Database.addBoard(v)
-            val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
-            //Ok(Json.toJson(boardWrapperResult))
-            Ok("hello")
+            Ok(g.toJson(v.to2DArray()))
           case Failure(e) =>
+            Database.addBoard(board)
             Ok("INVALID MOVE: " + e)
         }
       }
@@ -92,10 +88,9 @@ class GameController  @Inject() extends Controller {
         board.left(movePoint) match {
           case Success(v) =>
             Database.addBoard(v)
-            val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
-            //Ok(Json.toJson(boardWrapperResult))
-            Ok("hello")
+            Ok(g.toJson(v.to2DArray()))
           case Failure(e) =>
+            Database.addBoard(board)
             Ok("INVALID MOVE: " + e)
         }
 
@@ -104,10 +99,9 @@ class GameController  @Inject() extends Controller {
         board.right(movePoint) match {
           case Success(v) =>
             Database.addBoard(v)
-            val boardWrapperResult = BoardWrapper(v, move.x, move.y, "none")
-            //Ok(Json.toJson(boardWrapperResult))
-            Ok("hello")
+            Ok(g.toJson(v.to2DArray()))
           case Failure(e) =>
+            Database.addBoard(board)
             Ok("INVALID MOVE: " + e)
         }
       }

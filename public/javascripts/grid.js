@@ -10,7 +10,7 @@ function move(json){
         contentType:"application/json;",
         dataType:"json",
         success: function(data){
-          build(data, 40)
+          build(data, data[0].length)
         },
         error: function(request, status, error){
             alert(request.responseText)}
@@ -27,6 +27,8 @@ function build(response, size){
         var height = 600 / size;
         var team = -1;
 
+        console.log(response);
+
         // iterate for rows
         for (var row = 0; row < size; row++) {
             data.push( new Array() );
@@ -38,7 +40,7 @@ function build(response, size){
                     y: ypos,
                     width: width,
                     height: height,
-                    team: team
+                    team: response[row][column]
                 })
                 // increment the x position. I.e. move it over by 50 (width variable)
                 xpos += width;
@@ -52,49 +54,6 @@ function build(response, size){
     }
 
     var data = gridData();
-
-    console.log(response); //problem with response
-
-    for(team in response.board.teamOne.cells){
-        var c = response.board.teamOne.cells[team];
-        x1 = c.topLeft.x;
-        y1 = c.topLeft.y;
-        x2 = c.botRight.x;
-        y2 = c.botRight.y;
-    	for (var row = x1; row < x2; row++) {
-            for (var col = y1; col < y2; col++) {
-                data[col][row].team = 0;
-            }
-        }
-    }
-
-    for(team in response.board.teamOne.cells){
-        var c = response.board.teamOne.cells[team];
-        x1 = c.topLeft.x;
-        y1 = c.topLeft.y;
-        data[y1+1][x1+1].team = 2;
-     }
-
-    for(team in response.board.teamTwo.cells){
-        var c = response.board.teamTwo.cells[team];
-        x1 = c.topLeft.x;
-        y1 = c.topLeft.y;
-        x2 = c.botRight.x;
-        y2 = c.botRight.y;
-        for (var row = x1; row < x2; row++) {
-            for (var col = y1; col < y2; col++) {
-                data[col][row].team = 1;
-                }
-            }
-        }
-    for(team in response.board.teamTwo.cells){
-        var c = response.board.teamTwo.cells[team];
-        x1 = c.topLeft.x;
-        y1 = c.topLeft.y;
-        data[y1+1][x1+1].team = 3;
-    }
-
-
 
     console.log(data);
 
@@ -118,13 +77,15 @@ function build(response, size){
     .attr("class","square")
     .attr("class", function(d) {
         if (d.team == 0){
-            return "outer"}
+            return "blank"}
         else if (d.team == 1){
-            return "outer"}
+            return "teamOne"}
         else if (d.team == 2){
-            return "center"}
-         else if (d.team == 3){
-            return "center"}
+            return "teamTwo"}
+        else if (d.team == 3){
+            return "TeamOneNuc"}
+        else if (d.team == 6){
+            return "teamTwoNuc"}
         else
             return "blank"
     })
@@ -134,29 +95,31 @@ function build(response, size){
     .attr("height", function(d) { return d.height; })
     .style("fill", function(d) {
         if (d.team == 0){
-            return "#e82cb9"}
+            return "white"}
         else if (d.team == 1){
-            return "#efe92f"}
+            return "red"}
         else if (d.team == 2){
-            return "black"}
-         else if (d.team == 3){
-            return "black"}
+            return "blue"}
+        else if (d.team == 3){
+            return "yellow"}
+        else if (d.team == 6){
+            return "green"}
         else
-            return "#fff"
+            return "white"
     })
     .style("stroke", "#222")
     .on('click', function(d) {
        var x = ($(this).attr('x') - 1) / $(this).attr('height');
        var y = ($(this).attr('y') - 1) / $(this).attr('height');
-       if(d.team == 2 || d.team == 3){
+       if(d.team == 3 || d.team == 6){
 
            var opt = prompt("(1) Up, (2) Down, (3) Left, (4) Right");
            var choice;
-           if(opt == 1){
+           if(opt == 8){
                choice = "up"
            }else if(opt == 2) {
                choice = "down"
-           }else if(opt == 3){
+           }else if(opt == 4){
                choice = "left"
            }else{
                choice = "right"

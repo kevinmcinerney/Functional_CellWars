@@ -8,7 +8,6 @@ case class Point(x: Int, y: Int){
 }
 
 
-
 object Point{
 
   import play.api.libs.json._
@@ -28,4 +27,16 @@ object Point{
 
 
 }
+
+
+
+//Type        Find Mover       Find mover merge     Create Outer Cells   Find virtual merge  ReduceVirtualCells
+//List        O(n)             O(n)                 O(n + m)             O(n^2)              FindVirtualMerge * numMerges = O(n^2) * O(m)
+//2dA         O(1)             O(1)                 O(n^2) + O(n + m)    O(n^2)              FindVirtualMerge * numMerges = O(n^2) * O(m)
+//
+//Soution: Add graph to list implementation
+//
+//Required Operations
+//Get Mover
+//get Merge
 
