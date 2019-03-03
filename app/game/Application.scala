@@ -1,64 +1,140 @@
-//package game
-//import controllers.GameController
-//import model.{Board, Database}
-//
-///**
-//  * Created by kevin on 26/01/19.
-//  */
-//object Application extends App{
+package game
+import model.Board
+import scala.collection.mutable.ListBuffer
+import scala.util.{Failure, Success, Try}
+import java.net.ServerSocket
+import java.io.PrintStream
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.Socket
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import java.util.concurrent.ConcurrentHashMap
+import scala.collection.JavaConverters._
 
-//  def loadTeam(x: Int, teamSize: Int): Team = {
-//
-//    val team = for {
-//      y <- 0 until (teamSize * 4) by 4
-//    } yield Cell(Coordinate(x, y), Coordinate(x + 3, y + 3))
-//
-//    Team(team.toList)
-//
-//  }
-//
-//  val numPerTeam = 40 / 4
-//
-//  val teamOne = loadTeam(0, numPerTeam)
-//
-//  val teamTwo = loadTeam(40 - 3, numPerTeam)
-//
-//  val board = Board(teamOne, teamTwo, Team(List()))
-//
-//
-//  val movePoint = Coordinate(1, 1)
-//
-//
-//  val t1 = board.down(movePoint)
-//
-//  Database.addBoard(board)
-//
-//  Database.getBoard()
-//
-//  val b2 = Board(teamTwo, teamOne, Team(List()))
-//
-//  Database.addBoard(b2)
-//
-//  println()
-//
-//  Database.getBoard()
+/**
+  * Created by kevin on 26/01/19.
+  */
+object Application extends App{
+
+  val size = 20
+
+  val numPerTeam = size / 4
 
 
-//  val cell1 = Cell(Point(0,0),Point(2,2))
-//  val cell2 = Cell(Point(17,17),Point(19,19))
-//  val cell3 = Cell(Point(7,7), Point(11,11))
-//  val cell4 = Cell(Point(3,3), Point(6,6))
-//  val cell5 = Cell(Point(2,2), Point(5,5))
-//  val cell6 = Cell(Point(0,5), Point(3,8))
-//
-//  val list = List(cell1,cell2,cell3,cell4,cell5,cell6)
-//
-//  private def reduce(list: List[Cell]): Cell = {
-//    list
-//      .foldLeft(Cell(Point(0,0), Point(0,0)))
-//      { (c1: Cell, c2: Cell) => c1 compare c2 }
-//  }
-//
-//   println(reduce(list))
+  def loadCells(x: Int, teamSize: Int, marker: Int): ListBuffer[RCell] = {
 
-//}
+    for {
+      y <- 0 until (teamSize * 4) by 4
+    } yield RCell(x, y, x + 3, y + 3, marker)
+
+  }.to[ListBuffer]
+
+  val rCells = loadCells(0, numPerTeam, 1) ++ loadCells(size - 3, numPerTeam, 2)
+
+  val Adj = Array.fill[Array[Int]](rCells.length)(Array.fill[Int](rCells.length)(0))
+
+  var board = Board(rCells, ListBuffer(), Adj)
+
+  val gameOver = false
+
+  var player = 1
+
+  case class User(name: String, sock: Socket, in: BufferedReader, out: PrintStream)
+  val users = new ConcurrentHashMap[String, User](2).asScala
+
+  Future { checkConnections() }
+  while(true) {
+    for ((name, user) <- users) {
+      doChat(user)
+    }
+    Thread.sleep(100)
+  }
+
+  def checkConnections(): Unit = {
+    val ss = new ServerSocket(4000)
+    while (true) {
+      val sock = ss.accept()
+      val in = new BufferedReader(new InputStreamReader(sock.getInputStream))
+      val out = new PrintStream(sock.getOutputStream)
+      Future {
+        out.println("What is your name?")
+        val name = in.readLine()
+        val user = User(name, sock, in ,out)
+        if (users.size < 2)
+        users += name -> user
+        else out.println("Game is full")
+      }
+    }
+  }
+
+  def nonblockingRead(in: BufferedReader): Option[String] = {
+    if(in.ready()) Some(in.readLine()) else None
+  }
+
+  def doChat(user: User): Unit = {
+    nonblockingRead(user.in).foreach { input =>
+      if(input == ":quit") {
+        user.sock.close()
+        users -= user.name
+      } else {
+        while(!gameOver){
+          for((n, u) <- users) {
+
+            board.print(u.out)
+
+            val selected = getSelection(u.out, u.in, n, player)
+
+            val move = getMove(u.out, u.in, board, selected)
+
+            board =
+              move match {
+                case Success(b) => b
+                case Failure(m) => board
+              }
+
+            for((n,u) <- users) {board.print(u.out); u.out.println()}
+            player = if(player == 1) 2 else 1
+          }
+        }
+      }
+    }
+  }
+
+    def getSelection(out: PrintStream,in: BufferedReader, name: String, p_player: Int): Int = {
+
+      out.println("Which cell are you moving," + name + "?")
+      val test = in.readLine()
+      println(test)
+      val selectedCell = test.toInt
+
+      if(selectedCell < 0 || selectedCell >= rCells.length) {
+        out.println("Invalid Pick. Try again")
+        getSelection(out, in, name, p_player)
+      }
+      else if ((selectedCell > 0 || selectedCell < rCells.length) && p_player != rCells(selectedCell).marker){
+        out.println("Invalid Pick. Try again")
+        getSelection(out, in, name, p_player)
+      } else {
+        selectedCell
+      }
+    }
+
+    def getMove(out: PrintStream, in: BufferedReader, board: Board, selected: Int): Try[Board] = {
+
+      out.println("Which direction are you moving? (4) Left, (6) right, (2) down, (8) up")
+      val move = in.readLine()
+      val newBoard = move
+      match {
+        case "4" => board.left(board.rCells(selected).nucleus)
+        case "6" => board.right(board.rCells(selected).nucleus)
+        case "2" => board.down(board.rCells(selected).nucleus)
+        case "8" => board.up(board.rCells(selected).nucleus)
+        case _ =>   getMove(out, in, board, selected)
+      }
+    newBoard
+    }
+
+
+
+}

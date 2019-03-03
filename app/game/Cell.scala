@@ -85,6 +85,8 @@ sealed trait Vertex { var visited = false }
 /**  Real Cell **/
 case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) extends Cell with Vertex {
 
+  def capture(p_marker: Int): RCell = RCell(x1,y1,x2,y2,p_marker)
+
   require(abs(x1 - x2) == 3 && abs(y1 - y2) == 3, "Not a real cell")
 
   def nucleus: Point = Point(x1 + 1, y1 + 1)

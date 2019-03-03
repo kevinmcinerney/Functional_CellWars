@@ -1,11 +1,13 @@
 package model
 
-import game.{Cell, Point, RCell, VCell}
+import java.io.PrintStream
+
+import game.{Cell, Point, RCell}
 
 import scala.Console._
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
-import Console.{BLUE_B, RED_B, CYAN_B, MAGENTA_B, BLACK_B,RESET,BLINK}
+import Console.{BLACK_B, BLINK, BLUE_B, MAGENTA_B, RED_B, RESET}
 
 /**
   * Created by kevin on 29/01/19.
@@ -15,11 +17,7 @@ class BadMoveException(msg: String) extends Exception(msg)
 
 case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Array[Array[Int]]){
 
-  def dimensions: Int = {
-    (rCells.length / 2) * 4
-  }
-
-  //Change cells by re-adding moved cell
+  def dimensions: Int = { rCells.length * 2 }
 
   def up(point: Point): Try[Board] = validateMove(_.up, point) match {
     case Success(i) => Success(move(_.up,i))
@@ -41,13 +39,19 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     case Failure(m) => Failure(m)
   }
 
-  private def move(fx: RCell => RCell, idx: Int): Board = {
-
+  private def moveCell(fx: RCell => RCell, idx: Int): ListBuffer[RCell] = {
     // Make Copy because is immutable
     val rCellsCopy = rCells.clone()
 
     // Make move
     rCellsCopy(idx) = fx(rCellsCopy(idx))
+
+    rCellsCopy
+  }
+
+  private def move(fx: RCell => RCell, idx: Int): Board = {
+
+    val rCellsCopy = moveCell(fx, idx)
 
     // Init Graph with moved cell
     val g = Graph(Board(rCellsCopy,vCells,edges))
@@ -68,13 +72,27 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
 
         // Merge virtual to real
         val vrMerged =
-        if(redVCells.nonEmpty) recMergeVirtualAndReal(redVCells, outerCells)
+        if(redVCells.nonEmpty && redVCells.length < newVCells.length)
+          recMergeVirtualAndReal(redVCells, outerCells)
+        else if (redVCells.nonEmpty && redVCells.length == newVCells.length)
+          recMergeVirtualAndReal(outerCells, redVCells)
         else ListBuffer[Cell]()
 
-        Board(rCellsCopy, vrMerged, newEdges)
+        // Replace redVCells with any new vcells from r-v merges
+        val redVMerge = vrMerged ++ redVCells.filterNot(_ contains vrMerged.head)
+
+        if(vrMerged.nonEmpty){
+          // Capture
+          rCellsCopy.foreach(r => if (vrMerged.head contains r) {
+            val ix = rCellsCopy.indexOf(r)
+            rCellsCopy(ix) = r.capture(rCellsCopy(idx).marker)
+          })
+        }
+
+        Board(rCellsCopy, redVMerge, newEdges)
       }
         // Only the moved rCell has changed
-      case None => Board(rCellsCopy, vCells, edges)
+      case None => { Board(rCellsCopy, vCells, edges) }
     }
   }
 
@@ -83,7 +101,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     val merges = pairs.filter(p => p.head contains p.tail.head)
     if(merges.nonEmpty){
       val newVCells = merges.map(pair => pair.head merge pair.tail.head)
-      merges.foreach(m => newVCells -= m.tail.head)
+      merges.foreach(m => {newVCells -= m.head; newVCells -= m.tail.head} )
       recMergeVirtualCells(newVCells)
     }
     else { vc }
@@ -94,15 +112,18 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     val merges = pairs.flatten.filter(p => p._1 contains p._2)
     if(merges.nonEmpty){
       val newVCells = merges.map(pair => pair._1 merge pair._2)
-      merges.foreach(m => oc -= m._2)
+      merges.foreach(m => { oc -= m._2; oc -= m._1 })
       recMergeVirtualAndReal(newVCells, oc)
     }
     else { vc }
   }
 
-  private def validateMove(move: RCell => RCell, nucleus: Point): Try[Int] = {
+  private def validateMove(fx: RCell => RCell, nucleus: Point): Try[Int] = {
+
     val mover_idx = rCells.indexWhere(_.nucleus == nucleus)
-    val mover = move(rCells(mover_idx).copy())
+
+    val mover = fx(rCells(mover_idx).copy())
+
     if(mover_idx != -1)
       if(isValidCellState(mover))
         Success(mover_idx)
@@ -118,7 +139,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
   }
 
   private def onBoard(cell: Cell): Boolean = {
-    val inRange = (i: Int) => i >= 0 && i < dimensions
+    val inRange = (i: Int) => i >= 0 && i <= dimensions
     inRange(cell.x1) && inRange(cell.x2) &&
       inRange(cell.y1) && inRange(cell.y2)
   }
@@ -127,7 +148,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     rCells.exists(_.nucleus == cell.nucleus)
   }
 
-  def to2DArray(): Array[Array[Int]] = {
+  def to2DArray: Array[Array[Int]] = {
 
     val matrix = Array.fill[Int](dimensions,dimensions) { 0 }
 
@@ -161,18 +182,32 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
   }
 
   def print: Unit = {
-    this.to2DArray() foreach { row => row foreach (p => {
-           if (p == 1) printf(s"${MAGENTA_B}* ${RESET}")
-      else if (p == 3) printf(s"${BLINK}${RED_B}O ${RESET}")
-      else if (p == 2) printf(s"${BLUE_B}* ${RESET}")
-      else if (p == 6) printf(s"${BLINK}${Console.GREEN_B}0 ${RESET}")
-      else if (p == 0) printf(s"${BLACK_B}  ${RESET}")
-      else printf("")
-    })
+    for(i <- this.to2DArray.indices){
+      for(j <- this.to2DArray.indices){
+             if (to2DArray(i)(j) == 1) printf(s"${MAGENTA_B} *${RESET}")
+        else if (to2DArray(i)(j) == 3) printf("%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
+        else if (to2DArray(i)(j) == 2) printf(s"${BLUE_B} *${RESET}")
+        else if (to2DArray(i)(j) == 6) printf("%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
+        else if (to2DArray(i)(j) == 0) printf(s"${BLACK_B}  ${RESET}")
+        else printf("")
+      }
       println
     }
   }
 
+  def print(out: PrintStream): Unit = {
+    for(i <- this.to2DArray.indices){
+      for(j <- this.to2DArray.indices){
+        if (to2DArray(i)(j) == 1) out.printf(s"${MAGENTA_B} *${RESET}")
+        else if (to2DArray(i)(j) == 3) out.printf("%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
+        else if (to2DArray(i)(j) == 2) out.printf(s"${BLUE_B} *${RESET}")
+        else if (to2DArray(i)(j) == 6) out.printf("%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
+        else if (to2DArray(i)(j) == 0) out.printf(s"${BLACK_B}  ${RESET}")
+        else out.printf("")
+      }
+      out.println
+    }
+  }
 }
 
 object Board { }

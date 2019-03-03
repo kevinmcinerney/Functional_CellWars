@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
   */
 object Database {
 
-  val database: ListBuffer[Board] = ListBuffer()
+  var database: ListBuffer[Board] = ListBuffer()
 
   def addBoard(board: Board): Unit = {
     database += board
@@ -15,6 +15,10 @@ object Database {
 
   def getBoard(): Board = {
     database.remove(0)
+  }
+
+  def clearBoard(): Unit = {
+    this.database = ListBuffer()
   }
 
 

@@ -20,6 +20,8 @@ class GameController  @Inject() extends Controller {
 
   def startPositions(size: Int) = Action {
 
+    Database.clearBoard()
+
     def loadCells(x: Int, teamSize: Int, marker: Int): ListBuffer[RCell] = {
 
       for {
@@ -30,7 +32,9 @@ class GameController  @Inject() extends Controller {
 
     val numPerTeam = size / 4
 
-    val teamOne = loadCells(0, numPerTeam, 1) += RCell(34,2,37,5,1)
+    val teamOne = loadCells(0, numPerTeam, 1)
+
+    teamOne.update(0, RCell(34,2,37,5,1))
 
     val teamTwo = loadCells(size - 3, numPerTeam, 2)
 
@@ -44,7 +48,7 @@ class GameController  @Inject() extends Controller {
 
     val g = new Gson()
 
-    Ok(g.toJson(board.to2DArray()))
+    Ok(g.toJson(board.to2DArray))
   }
 
   def move() = Action {
@@ -65,7 +69,7 @@ class GameController  @Inject() extends Controller {
         board.up(movePoint) match {
           case Success(v) =>
             Database.addBoard(v)
-            Ok(g.toJson(v.to2DArray()))
+            Ok(g.toJson(v.to2DArray))
           case Failure(e) =>
             Database.addBoard(board)
             Ok("INVALID MOVE: " + e)
@@ -77,7 +81,7 @@ class GameController  @Inject() extends Controller {
         board.down(movePoint) match {
           case Success(v) =>
             Database.addBoard(v)
-            Ok(g.toJson(v.to2DArray()))
+            Ok(g.toJson(v.to2DArray))
           case Failure(e) =>
             Database.addBoard(board)
             Ok("INVALID MOVE: " + e)
@@ -88,7 +92,7 @@ class GameController  @Inject() extends Controller {
         board.left(movePoint) match {
           case Success(v) =>
             Database.addBoard(v)
-            Ok(g.toJson(v.to2DArray()))
+            Ok(g.toJson(v.to2DArray))
           case Failure(e) =>
             Database.addBoard(board)
             Ok("INVALID MOVE: " + e)
@@ -99,7 +103,7 @@ class GameController  @Inject() extends Controller {
         board.right(movePoint) match {
           case Success(v) =>
             Database.addBoard(v)
-            Ok(g.toJson(v.to2DArray()))
+            Ok(g.toJson(v.to2DArray))
           case Failure(e) =>
             Database.addBoard(board)
             Ok("INVALID MOVE: " + e)
@@ -107,10 +111,4 @@ class GameController  @Inject() extends Controller {
       }
 
   }
-
-
-
-
-
-
 }

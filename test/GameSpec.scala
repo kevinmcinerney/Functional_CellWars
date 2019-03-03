@@ -12,6 +12,12 @@ import scala.collection.mutable.ListBuffer
   */
 class GameSpec extends PlaySpec with PrivateMethodTester {
 
+  def time[R](block: => R): String = {
+    val t0 = System.nanoTime()
+    val t1 = System.nanoTime()
+    "Elapsed time: " + (t1 - t0) + "ms"
+  }
+
   val cell1 = RCell(0,0,3,3,1)
   val cell2 = RCell(3,0,6,3,1)
   val cell3 = RCell(2,3,5,6,1)
@@ -31,7 +37,7 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
   val rCells_t1 = ListBuffer(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12,cell13,cell14)
   val rCells_t2 = ListBuffer(cell1,cell2,cell3.right,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12,cell13,cell14)
   val rCells_t3 = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6,cell7,cell8,cell9,cell10,cell11,cell12,cell13,cell14)
-  val rCells_t4 = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right,cell7,cell8,cell9,cell10,cell11,cell12,cell13,cell14)
+  val rCells_t4 = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right,cell7,cell8.capture(1),cell9,cell10,cell11,cell12,cell13,cell14)
   val Adj = Array.fill[Array[Int]](rCells_t1.length)(Array.fill[Int](rCells_t1.length)(0))
 
   val board_t1 = Board(rCells_t1, ListBuffer(), Adj)
@@ -54,11 +60,25 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
   board_t3.print
   println()
 
-  Adj(4)(5) = 1
-  Adj(5)(4) = 1
+  Adj(5)(6) = 1
+  Adj(6)(5) = 1
 
-  val board_t4 = Board(rCells_t4, ListBuffer(VCell(0,0,12,12,1)), Adj)
-  println("board_t4: cell3 right, cell5 right, cell6 right")
+  val board_t4 = Board(rCells_t4, ListBuffer(VCell(3,0,12,12,1)), Adj)
+
+  println("board_t4: Before Right-Right-Left-Left: cell3 right, cell5 right, cell6 right")
+  board_t4.print
+  println()
+
+  "right-right-left-left" should {
+    val isCollision = PrivateMethod[Boolean]('isCollision)
+    "for " + cell1 + " should be same " in {
+      board_t4.right(Point(1, 1)).get.right(Point(2,1)).get.left(Point(3,1)).get.left(Point(2, 1)).get.edges mustEqual board_t4.edges
+      board_t4.right(Point(1, 1)).get.right(Point(2,1)).get.left(Point(3,1)).get.left(Point(2, 1)).get.rCells mustEqual board_t4.rCells
+      board_t4.right(Point(1, 1)).get.right(Point(2,1)).get.left(Point(3,1)).get.left(Point(2, 1)).get.vCells mustEqual board_t4.vCells
+    }
+  }
+
+  println("board_t4 After Right-Right-Left-Left: cell3 right, cell5 right, cell6 right")
   board_t4.print
   println()
 
@@ -96,14 +116,23 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
     }
   }
 
-  "valid moves for " + cell1 should {
-      val isValidCellState = PrivateMethod[Boolean]('isValidCellState)
-      "are not move up" in { board_t1 invokePrivate isValidCellState(cell1.up) mustBe false }
-      "are not move left" in { board_t1 invokePrivate isValidCellState(cell1.left) mustBe false }
-      "are move down" in  { board_t1 invokePrivate isValidCellState(cell1.down)  mustBe true }
-      "are move right" in { board_t1 invokePrivate isValidCellState(cell1.right) mustBe true }
-    }
 
+
+    "valid moves for " + cell1 should {
+      val isValidCellState = PrivateMethod[Boolean]('isValidCellState)
+      "are not move up" in {
+        board_t1 invokePrivate isValidCellState(cell1.up) mustBe false
+      }
+      "are not move left" in {
+        board_t1 invokePrivate isValidCellState(cell1.left) mustBe false
+      }
+      "are move down" in {
+        board_t1 invokePrivate isValidCellState(cell1.down) mustBe true
+      }
+      "are move right" in {
+        board_t1 invokePrivate isValidCellState(cell1.right) mustBe true
+      }
+    }
 
   "valid moves for " + cell2 should {
     val isValidCellState = PrivateMethod[Boolean]('isValidCellState)
@@ -240,7 +269,7 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
   board_t1c.print
   println()
 
-  println("board_t2c: After moving cell3 down")
+  println("board_t2c: After moving cell3 up")
   board_t2c.print
   println()
 
@@ -387,4 +416,66 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
       board_t1j.right(Point(7, 4)).get.vCells mustEqual board_t1k.vCells
     }
   }
+
+
+  val Adj9 = Array.fill[Array[Int]](14)(Array.fill[Int](14)(0))
+  Adj9(2)(3) = 1
+  Adj9(3)(2) = 1
+  Adj9(3)(4) = 1
+  Adj9(4)(3) = 1
+  Adj9(5)(6) = 1
+  Adj9(6)(5) = 1
+  val board_t4a = Board(ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right.right,cell7,cell8,cell9,
+                                   cell10,cell11,cell12,cell13,cell14),ListBuffer(VCell(8,0,12,5,1),VCell(3,3,8,10,1)), Adj9)
+
+  val rCells_t4b = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right,cell7,cell8.capture(1),cell9,cell10,cell11,cell12,cell13,cell14)
+  val board_t4b = Board(rCells_t4b, ListBuffer(VCell(3,0,12,12,1)), Adj9)
+
+
+  println("board_t4b: Before: V-V Capture")
+  board_t4a.print
+  println()
+
+  println("board_t4b: After V-V Capture")
+  board_t4a.left(Point(9, 1)).get.print
+
+  "virtual capture " should {
+    "happen for " in {
+      board_t4a.left(Point(9, 1)).get.edges mustEqual board_t4b.edges
+      board_t4a.left(Point(9, 1)).get.rCells mustEqual board_t4b.rCells
+      board_t4a.left(Point(9, 1)).get.vCells mustEqual board_t4b.vCells
+    }
+  }
+
+
+  println("====================== Performance ======================")
+  println("")
+  val t1 = time{
+    board_t1j.right(Point(7, 4))
+  }
+  println("Time to v-v split: " + t1)
+
+
+  val t2 = time{
+    board_t1h.left(Point(10,6))
+  }
+  println("Time to v-v merge: " + t2)
+
+
+  val t3 = time{
+    board_t1f.left(Point(8,1))
+  }
+  println("Time to v-v merge: " + t3)
+
+  val t4 = time{
+    board_t1e.right(Point(3,4))
+  }
+  println("Time move cell:" + t4)
+
+  val t5 = time{
+    board_t4.right(Point(1, 1)).get.right(Point(2,1)).get.left(Point(3,1)).get.left(Point(2, 1))
+  }
+  println("Time move cell 4 times:" + t5)
+  println("")
+  println("=========================================================")
 }
