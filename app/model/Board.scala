@@ -40,6 +40,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
   }
 
   private def moveCell(fx: RCell => RCell, idx: Int): ListBuffer[RCell] = {
+
     // Make Copy because is immutable
     val rCellsCopy = rCells.clone()
 
@@ -51,79 +52,93 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
 
   private def move(fx: RCell => RCell, idx: Int): Board = {
 
+    // Move Real Cell
     val rCellsCopy = moveCell(fx, idx)
 
-    // Init Graph with moved cell
-    val g = Graph(Board(rCellsCopy,vCells,edges))
+    // Pattern match graph
+    Graph(Board(rCellsCopy, vCells, edges)).update(idx)  match {
 
-    // Get new edges, vcells, and list of merged rcells
-    g.update(idx)  match {
-
-      case Some(GraphUpdateResult(newEdges, newVCells, alreadyMerged)) => {
-
-        // Merge virtual to virtual
-        val redVCells = recMergeVirtualCells(newVCells)
-
-        // Make outer cells
-        val outerCells = rCellsCopy.clone() ++ redVCells
-
-        // Remove merged cells from outer cells
-        alreadyMerged.flatten.foreach(c => outerCells -= c)
-
-        // Merge virtual to real
-        val vrMerged =
-        if(redVCells.nonEmpty && redVCells.length < newVCells.length)
-          recMergeVirtualAndReal(redVCells, outerCells)
-        else if (redVCells.nonEmpty && redVCells.length == newVCells.length)
-          recMergeVirtualAndReal(outerCells, redVCells)
-        else ListBuffer[Cell]()
-
-        // Replace redVCells with any new vcells from r-v merges
-        val redVMerge = vrMerged ++ redVCells.filterNot(_ contains vrMerged.head)
-
-        if(vrMerged.nonEmpty){
-          // Capture
-          rCellsCopy.foreach(r => if (vrMerged.head contains r) {
-            val ix = rCellsCopy.indexOf(r)
-            rCellsCopy(ix) = r.capture(rCellsCopy(idx).marker)
-          })
-        }
-
-        Board(rCellsCopy, redVMerge, newEdges)
-      }
-        // Only the moved rCell has changed
-      case None => { Board(rCellsCopy, vCells, edges) }
+        // Merges Needed
+      case Some(GraphUpdateResult(newEdges, connected, unconnected)) =>
+        merge(newEdges, connected, unconnected, rCellsCopy, idx)
+        // No merges needed
+      case None => Board(rCellsCopy, vCells, edges)
     }
+  }
+
+  private def merge(edges: Array[Array[Int]],
+            connected: ListBuffer[Cell],
+            unconnected: ListBuffer[RCell],
+            rCellsCopy: ListBuffer[RCell],
+            idx: Int): Board = {
+
+    // Get Virtual Cells
+    val vrMerged = rec(connected, unconnected, rCellsCopy, idx)
+
+    // Capture Real Cells
+    val capturedRCells = capture(rCellsCopy, vrMerged, idx)
+
+    Board(capturedRCells, vrMerged, edges)
+  }
+
+  private def rec(connected: ListBuffer[Cell], unconnected: ListBuffer[RCell], rCellsCopy: ListBuffer[RCell], idx: Int): ListBuffer[Cell] = {
+
+    // Recursively merge V-V until no change
+    val redVCells = recMergeVirtualCells(connected)
+
+    // Recursively merge V-R until no change
+    val vrMerged = recMergeVirtualAndReal(rCellsCopy(idx), redVCells, unconnected.asInstanceOf[ListBuffer[Cell]])
+
+    // Recursively call self until no change
+    if(connected == vrMerged) connected else rec(vrMerged, unconnected, rCellsCopy, idx)
+  }
+
+  private def capture(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], idx: Int): ListBuffer[RCell] = {
+    val rCopy = rCells.clone()
+    if(vCells.nonEmpty){
+      rCopy.foreach(r => if (vCells.head contains r) {
+        val ix = rCopy.indexOf(r)
+        rCopy(ix) = r.capture(rCopy(idx).marker).asInstanceOf[RCell]
+      })
+    }
+    rCopy
   }
 
   private def recMergeVirtualCells(vc: ListBuffer[Cell]): ListBuffer[Cell] = {
+
     val pairs = vc.combinations(2).to[ListBuffer]
+
     val merges = pairs.filter(p => p.head contains p.tail.head)
+
     if(merges.nonEmpty){
       val newVCells = merges.map(pair => pair.head merge pair.tail.head)
-      merges.foreach(m => {newVCells -= m.head; newVCells -= m.tail.head} )
-      recMergeVirtualCells(newVCells)
+      merges.foreach(m => {vc -= m.head; vc -= m.tail.head} )
+      recMergeVirtualCells(newVCells ++ vc)
     }
     else { vc }
   }
 
-  private def recMergeVirtualAndReal(vc: ListBuffer[Cell], oc: ListBuffer[Cell] ): ListBuffer[Cell] = {
-    val pairs = vc.map(v => oc.map(o => (v, o)))
-    val merges = pairs.flatten.filter(p => p._1 contains p._2)
-    if(merges.nonEmpty){
-      val newVCells = merges.map(pair => pair._1 merge pair._2)
-      merges.foreach(m => { oc -= m._2; oc -= m._1 })
-      recMergeVirtualAndReal(newVCells, oc)
+  private def recMergeVirtualAndReal(mCell: RCell, vc: ListBuffer[Cell], oc: ListBuffer[Cell] ): ListBuffer[Cell] = {
+    val pairs = vc.flatMap(v => oc.map(o => (v, o)))
+    val newVCells: ListBuffer[Cell] =
+    for((left, right) <- pairs if left contains right) yield {
+      oc -= (left,right)
+      captureVCells(left,right,mCell)
     }
-    else { vc }
+    if(newVCells.nonEmpty) recMergeVirtualAndReal(mCell, recMergeVirtualCells(newVCells ++ vc), oc)
+    else vc
+  }
+
+  private def captureVCells(left: Cell, right: Cell, mCell: Cell): Cell = {
+    val m = left merge right
+    if(m contains mCell){
+      m.capture(mCell.marker)
+    }else{ m }
   }
 
   private def validateMove(fx: RCell => RCell, nucleus: Point): Try[Int] = {
-
     val mover_idx = rCells.indexWhere(_.nucleus == nucleus)
-
     val mover = fx(rCells(mover_idx).copy())
-
     if(mover_idx != -1)
       if(isValidCellState(mover))
         Success(mover_idx)
@@ -131,7 +146,6 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
         Failure(new BadMoveException("Invalid move from this position: " + rCells(mover_idx) + " " + dimensions))
     else
       Failure(new BadMoveException("You didn't select a cell to move"))
-
   }
 
   private def isValidCellState(cell: RCell): Boolean = {
@@ -187,7 +201,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
              if (to2DArray(i)(j) == 1) printf(s"${MAGENTA_B} *${RESET}")
         else if (to2DArray(i)(j) == 3) printf("%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
         else if (to2DArray(i)(j) == 2) printf(s"${BLUE_B} *${RESET}")
-        else if (to2DArray(i)(j) == 6) printf("%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
+        else if (to2DArray(i)(j) == 6) printf(s"${RED_B}%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
         else if (to2DArray(i)(j) == 0) printf(s"${BLACK_B}  ${RESET}")
         else printf("")
       }

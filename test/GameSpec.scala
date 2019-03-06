@@ -37,7 +37,7 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
   val rCells_t1 = ListBuffer(cell1,cell2,cell3,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12,cell13,cell14)
   val rCells_t2 = ListBuffer(cell1,cell2,cell3.right,cell4,cell5,cell6,cell7,cell8,cell9,cell10,cell11,cell12,cell13,cell14)
   val rCells_t3 = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6,cell7,cell8,cell9,cell10,cell11,cell12,cell13,cell14)
-  val rCells_t4 = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right,cell7,cell8.capture(1),cell9,cell10,cell11,cell12,cell13,cell14)
+  val rCells_t4 = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right,cell7,cell8.capture(1).asInstanceOf[RCell],cell9,cell10,cell11,cell12,cell13,cell14)
   val Adj = Array.fill[Array[Int]](rCells_t1.length)(Array.fill[Int](rCells_t1.length)(0))
 
   val board_t1 = Board(rCells_t1, ListBuffer(), Adj)
@@ -70,7 +70,6 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
   println()
 
   "right-right-left-left" should {
-    val isCollision = PrivateMethod[Boolean]('isCollision)
     "for " + cell1 + " should be same " in {
       board_t4.right(Point(1, 1)).get.right(Point(2,1)).get.left(Point(3,1)).get.left(Point(2, 1)).get.edges mustEqual board_t4.edges
       board_t4.right(Point(1, 1)).get.right(Point(2,1)).get.left(Point(3,1)).get.left(Point(2, 1)).get.rCells mustEqual board_t4.rCells
@@ -116,6 +115,14 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
     }
   }
 
+//  "reduceVCells should " should {
+//    val reduceVCells = PrivateMethod[ListBuffer[Cell]]('reduceVCells)
+//    "reduce to length 2" in {
+//      board_t1 invokePrivate reduceVCells(ListBuffer(VCell(0,0,10,9,1)),ListBuffer(VCell(0,0,7,6,1),VCell(2,0,7,6,1), VCell(11,11,15,15,1))) mustEqual
+//        ListBuffer(VCell(11,11,15,15,1),VCell(0,0,10,9,1))
+//    }
+//
+//  }
 
 
     "valid moves for " + cell1 should {
@@ -428,7 +435,7 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
   val board_t4a = Board(ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right.right,cell7,cell8,cell9,
                                    cell10,cell11,cell12,cell13,cell14),ListBuffer(VCell(8,0,12,5,1),VCell(3,3,8,10,1)), Adj9)
 
-  val rCells_t4b = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right,cell7,cell8.capture(1),cell9,cell10,cell11,cell12,cell13,cell14)
+  val rCells_t4b = ListBuffer(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right,cell7,cell8.capture(1).asInstanceOf[RCell],cell9,cell10,cell11,cell12,cell13,cell14)
   val board_t4b = Board(rCells_t4b, ListBuffer(VCell(3,0,12,12,1)), Adj9)
 
 
@@ -447,9 +454,75 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
     }
   }
 
+  val Adj10 = Array.fill[Array[Int]](14)(Array.fill[Int](14)(0))
+  Adj10(3)(4) = 1
+  Adj10(4)(3) = 1
+  Adj10(5)(6) = 1
+  Adj10(6)(5) = 1
+  Adj10(12)(13) = 1
+  Adj10(13)(12) = 1
+
+  val board_t5a = Board(ListBuffer(RCell(1,0,4,3,1), RCell(0,3,3,6,2),RCell(4,2,7,5,2),RCell(7,5,10,8,2),RCell(6,6,9,9,2),RCell(0,7,3,10,2),RCell(2,9,5,12,2),
+                        cell8,cell9,cell10,cell11,cell12,cell13.right.down,cell14), ListBuffer(VCell(0,7,5,12,2), VCell(6,5,10,9,2), VCell(13,12,20,18,2)), Adj10)
+
+
+  val board_t5b = Board(ListBuffer(RCell(2,0,5,3,1), RCell(0,3,3,6,1),RCell(4,2,7,5,1),RCell(7,5,10,8,1),RCell(6,6,9,9,1),RCell(0,7,3,10,1),RCell(2,9,5,12,1),
+                        RCell(9,9,12,12,1),cell9,cell10,cell11,cell12,cell13.right.down,cell14), ListBuffer(VCell(0,0,12,12,1),VCell(13,12,20,18,2)), Adj10)
+
+
+  println("board_t5a: Before: R-R V-R V-V")
+  board_t5a.print
+  println()
+
+  println("board_t5a: After R-R V-R V-V")
+  board_t5a.right(Point(2, 1)).get.print
+
+  "R-R...... " should {
+    "should give one VCell for team 1" in {
+      board_t5a.right(Point(2, 1)).get.edges mustEqual board_t5b.edges
+      board_t5a.right(Point(2, 1)).get.rCells mustEqual board_t5b.rCells
+      board_t5a.right(Point(2, 1)).get.vCells mustEqual board_t5b.vCells
+
+    }
+  }
+
+
+  val Adj11 = Array.fill[Array[Int]](14)(Array.fill[Int](14)(0))
+  Adj11(3)(4) = 1
+  Adj11(4)(3) = 1
+  Adj11(5)(6) = 1
+  Adj11(6)(5) = 1
+  Adj11(12)(13) = 1
+  Adj11(13)(12) = 1
+
+  val board_t6a = Board(ListBuffer(RCell(1,0,4,3,2), RCell(0,3,3,6,2),RCell(4,2,7,5,1),RCell(7,5,10,8,2),RCell(6,6,9,9,2),RCell(0,7,3,10,2),RCell(2,9,5,12,2),
+    cell8,cell9,cell10,cell11,cell12,cell13.right.down,cell14), ListBuffer(VCell(0,7,5,12,2), VCell(6,5,10,9,2), VCell(13,12,20,18,2)), Adj11)
+
+
+  val board_t6b = Board(ListBuffer(RCell(1,0,4,3,2), RCell(0,3,3,6,1),RCell(4,3,7,6,1),RCell(7,5,10,8,1),RCell(6,6,9,9,1),RCell(0,7,3,10,1),RCell(2,9,5,12,1),
+    RCell(9,9,12,12,1),cell9,cell10,cell11,cell12,cell13.right.down,cell14), ListBuffer(VCell(0,3,12,12,1),VCell(13,12,20,18,2)), Adj11)
+
+
+  println("board_t6a: Before: R-V V-R V-V")
+  board_t6a.print
+  println()
+
+  println("board_t6a: After R-V V-R V-V")
+  board_t6a.down(Point(5, 3)).get.print
+
+  "R-V......... " should {
+    "should give one VCell for team 1" in {
+      board_t6a.down(Point(5, 3)).get.edges mustEqual board_t6b.edges
+      board_t6a.down(Point(5, 3)).get.rCells mustEqual board_t6b.rCells
+      board_t6a.down(Point(5, 3)).get.vCells mustEqual board_t6b.vCells
+
+    }
+  }
 
   println("====================== Performance ======================")
   println("")
+
+
   val t1 = time{
     board_t1j.right(Point(7, 4))
   }

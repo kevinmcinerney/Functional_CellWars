@@ -32,6 +32,8 @@ sealed trait Cell {
     RCell(x1 + 1, y1 + 0, x2 + 1, y2 + 0, marker)
   }
 
+  def capture(p_marker: Int): Cell
+
   def innerPoints: List[Point] = {
     for {
       x <- x1 + 1 until x2
@@ -61,6 +63,11 @@ sealed trait Cell {
     allPoints.contains(other)
   }
 
+  def fullyInsideOf(other: Cell): Boolean = {
+    this != other &&
+      allPoints.forall(p => other.contains(p))
+  }
+
   def area: Int = abs(x2 - x1) * abs(y2 - y1)
 
   def merge(other: Cell): Cell = {
@@ -85,9 +92,9 @@ sealed trait Vertex { var visited = false }
 /**  Real Cell **/
 case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) extends Cell with Vertex {
 
-  def capture(p_marker: Int): RCell = RCell(x1,y1,x2,y2,p_marker)
-
   require(abs(x1 - x2) == 3 && abs(y1 - y2) == 3, "Not a real cell")
+
+  def capture(p_marker: Int): Cell = RCell(x1,y1,x2,y2,p_marker)
 
   def nucleus: Point = Point(x1 + 1, y1 + 1)
 
@@ -100,6 +107,8 @@ case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) ex
 case class VCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) extends Cell {
 
   require((abs(x1 - x2) >= 3 && abs(y1 - y2) >= 3) && area != 9, "Not a virtual cell")
+
+  def capture(p_marker: Int): Cell = VCell(x1,y1,x2,y2,p_marker)
 
   override def toString: String = "v("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") " + " Team: " + marker
 }

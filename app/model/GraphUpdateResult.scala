@@ -9,6 +9,6 @@ import scala.collection.mutable.ListBuffer
   */
 case class GraphUpdateResult(adj: Array[Array[Int]],
                              vCells: ListBuffer[Cell],
-                             mergedAlready: ListBuffer[ListBuffer[RCell]]) {
+                             unmerged: ListBuffer[RCell]) {
 
 }

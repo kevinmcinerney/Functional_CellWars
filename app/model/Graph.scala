@@ -58,13 +58,13 @@ case class Graph(board: Board) // No. of vertices)
       val index = merge.map(p => (getIdx(p._1), getIdx(p._2)))
       merge.foreach(p => index.foreach(i => addEdge(i._1, i._2)))
 
-      val forest = FDFS(idx)
+      val (real, virtual) = FDFS(idx).partition(_.length == 1)
 
-      val redVCells = reduceVTrees(forest)
+      val redVCells = reduceVTrees(virtual)
 
       Some(GraphUpdateResult(adj = adj,
         vCells = redVCells,
-        mergedAlready = forest))
+        unmerged = real.flatten))
     }
     else {
       None
@@ -79,7 +79,7 @@ case class Graph(board: Board) // No. of vertices)
       if (!vertexList(i).visited) {
         vertexList(i).visited = true
         val spanningTree = DFS(i)
-        if (spanningTree.length > 1) spanningTrees += spanningTree
+        spanningTrees += spanningTree
 
       }
     }
@@ -87,8 +87,6 @@ case class Graph(board: Board) // No. of vertices)
     vertexList.foreach { v => v.visited = false }
 
     spanningTrees
-      .filter((xs: ListBuffer[RCell]) => xs.length > 1)
-
   }
 
   private def reduceVTrees(vTrees: ListBuffer[ListBuffer[RCell]]) = {
