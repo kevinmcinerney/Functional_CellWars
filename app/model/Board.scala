@@ -6,7 +6,7 @@ import game.{Cell, Point, RCell}
 
 import scala.Console._
 import scala.collection.mutable.ListBuffer
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Random, Success, Try}
 import Console.{BLACK_B, BLINK, BLUE_B, MAGENTA_B, RED_B, RESET}
 
 /**
@@ -20,21 +20,25 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
   def dimensions: Int = { rCells.length * 2 }
 
   def up(point: Point): Try[Board] = validateMove(_.up, point) match {
+    case Success(-1) => Success(this) // For random games
     case Success(i) => Success(move(_.up,i))
     case Failure(m) => Failure(m)
   }
 
   def down(point: Point): Try[Board] = validateMove(_.down, point) match {
+    case Success(-1) => Success(this) // For random games
     case Success(i) => Success(move(_.down,i))
     case Failure(m) => Failure(m)
   }
 
   def left(point: Point): Try[Board] = validateMove(_.left, point) match {
+    case Success(-1) => Success(this) // For random games
     case Success(i) => Success(move(_.left, i))
     case Failure(m) => Failure(m)
   }
 
   def right(point: Point): Try[Board] = validateMove(_.right, point) match {
+    case Success(-1) => Success(this) // For random games
     case Success(i) => Success(move(_.right, i))
     case Failure(m) => Failure(m)
   }
@@ -95,11 +99,14 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
 
   private def capture(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], idx: Int): ListBuffer[RCell] = {
     val rCopy = rCells.clone()
-    if(vCells.nonEmpty){
-      rCopy.foreach(r => if (vCells.head contains r) {
-        val ix = rCopy.indexOf(r)
-        rCopy(ix) = r.capture(rCopy(idx).marker).asInstanceOf[RCell]
-      })
+    for(i <- rCopy.indices) {
+      for (j <- vCells.indices) {
+        if (vCells(j) contains rCopy(i)) {
+          rCopy(i) = rCopy(i).capture(vCells(j).marker).asInstanceOf[RCell]
+        } else {
+          rCopy
+        }
+      }
     }
     rCopy
   }
@@ -143,7 +150,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
       if(isValidCellState(mover))
         Success(mover_idx)
       else
-        Failure(new BadMoveException("Invalid move from this position: " + rCells(mover_idx) + " " + dimensions))
+      Success(-1) //Failure(new BadMoveException("Invalid move from this position: " + rCells(mover_idx) + " " + dimensions))
     else
       Failure(new BadMoveException("You didn't select a cell to move"))
   }
@@ -215,12 +222,16 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
         if (to2DArray(i)(j) == 1) out.printf(s"${MAGENTA_B} *${RESET}")
         else if (to2DArray(i)(j) == 3) out.printf("%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
         else if (to2DArray(i)(j) == 2) out.printf(s"${BLUE_B} *${RESET}")
-        else if (to2DArray(i)(j) == 6) out.printf("%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
+        else if (to2DArray(i)(j) == 6) out.printf(s"${RED_B}%02d".format(rCells.indexWhere(_.nucleus == Point(j,i))).toString)
         else if (to2DArray(i)(j) == 0) out.printf(s"${BLACK_B}  ${RESET}")
         else out.printf("")
       }
       out.println
     }
+  }
+
+  def toCSV: String = {
+    this.to2DArray.flatten.mkString(",")
   }
 }
 
