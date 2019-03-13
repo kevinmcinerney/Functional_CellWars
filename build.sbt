@@ -19,5 +19,6 @@ libraryDependencies ++= Seq(
 // https://mvnrepository.com/artifact/com.google.code.gson/gson
 libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 
-
-fork in run := false
+resolvers += "Sonatype OSS Snapshots" at
+  "https://oss.sonatype.org/content/repositories/snapshots"
+libraryDependencies += "com.storm-enroute" %% "scalameter-core" % "0.6"

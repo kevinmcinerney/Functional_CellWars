@@ -1,9 +1,11 @@
 package model
 
-//import game.Team
 
 /**
-  * Created by kevin on 31/01/19.
+  * Used to encapsulate a move
+  * @param x coordinate
+  * @param y coordinate
+  * @param move left,right,up, or down
   */
 case class Move(x: Int, y: Int, move: String)
 
