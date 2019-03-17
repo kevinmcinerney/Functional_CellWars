@@ -1,24 +1,33 @@
 import game.RCell
+import mcts.{MonteCarloTreeSearch, Node}
 import model.Board
 import org.scalameter._
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.parallel.ParSeq
+import scala.collection.parallel.mutable.ParArray
 
 object RangeBenchmark extends  App{
 
 
+  /**
+    * Assign new team to Cell
+    * @param x_axis the x-axis on which to build team of Cells
+    * @param teamSize number of Cells in a team
+    * @param marker the team (1,2) to assign Cell
+    * @return captured Cell
+    */
   def loadCells(x_axis: Int, teamSize: Int, marker: Int): ListBuffer[RCell] = {
+    val start = if(marker == 1) 0  else teamSize
     for {
       y <- 0 until (teamSize * 4) by 4
-    } yield RCell(x_axis, y, x_axis + 3, y + 3, marker)
+    } yield RCell(x_axis, y, x_axis + 3, y + 3, marker, start + y /4)
 
   }.to[ListBuffer]
 
-  val teamOne = loadCells(7, 5, 1)
+  val teamOne = loadCells(0, 5, 1)
 
-  //teamOne.update(0, RCell(34,2,37,5,1))
-
-  val teamTwo = loadCells(12, 5, 2)
+  val teamTwo = loadCells(17, 5, 2)
 
   val rCells = teamOne ++ teamTwo
 
@@ -26,11 +35,32 @@ object RangeBenchmark extends  App{
 
   val board = Board(rCells, ListBuffer(), emptyAdj)
 
+  val numCores = 7
+
+  val time2 = measure {
+
+    val result: ParSeq[Seq[Node]] =
+      for(i <- (0 until numCores).par) yield  new MonteCarloTreeSearch().findNextMove(board,2,1000)
+
+    val idx = new MonteCarloTreeSearch().bestMove(board, 2, result)
+
+    result.head(idx).state.board.print()
+  }
+  println(s"Total time: $time2")
+
+
+
+
   val time = measure {
-    import game.RandomGame
-    RandomGame.randomPlay(board)
+    val result: ParSeq[Seq[Node]] =
+      for(i <- (0 until numCores).par) yield  new MonteCarloTreeSearch().findNextMove(board,2,1000)
+
+    val idx = new MonteCarloTreeSearch().bestMove(board, 2, result)
+
+    result.head(idx).state.board.print()
   }
   println(s"Total time: $time")
+
 
   // Before
   //Total time: 8375.565843

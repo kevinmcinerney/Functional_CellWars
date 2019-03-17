@@ -3,7 +3,6 @@ package model
 import game.{Cell, RCell, VCell}
 
 import scala.collection.mutable.ListBuffer
-import scala.util.Try
 
 /**
   * The Graph
@@ -12,11 +11,13 @@ import scala.util.Try
 case class Graph(board: Board)
 {
 
-  val adj = board.edges.map(_.clone)
+  val b = board.cloneBoard
 
-  val vertexList = board.rCells.clone()
+  val adj = b.edges // clone because mutable // graph changes are only for new child board
 
-  val vCells = board.vCells.clone()
+  val vertexList = b.rCells
+
+  val vCells = b.vCells
 
   val V = vertexList.length
 
@@ -25,7 +26,7 @@ case class Graph(board: Board)
     * @param c1_idx index of RCell in [[Graph.vertexList]]
     * @param c2_idx index of RCell in [[Graph.vertexList]]
     */
-  def addEdge(c1_idx: Int, c2_idx: Int): Unit = {
+  private def addEdge(c1_idx: Int, c2_idx: Int): Unit = {
     adj(c1_idx)(c2_idx) = 1
     adj(c2_idx)(c1_idx) = 1
   }
@@ -35,7 +36,7 @@ case class Graph(board: Board)
     * @param c1_idx index of RCell in [[Graph.vertexList]]
     * @param c2_idx index of RCell in [[Graph.vertexList]]
     */
-  def delEdge(c1_idx: Int, c2_idx: Int): Unit = {
+  private def delEdge(c1_idx: Int, c2_idx: Int): Unit = {
     adj(c1_idx)(c2_idx) = 0
     adj(c2_idx)(c1_idx) = 0
   }
@@ -46,7 +47,7 @@ case class Graph(board: Board)
     * @param rCell RCell to evalute
     * @return true if rCell is inside of one of VCells
     */
-  def isInsideVCell(rCell: RCell): Boolean = {
+  private def isInsideVCell(rCell: RCell): Boolean = {
     vCells.exists(v => v contains rCell)
   }
 
@@ -76,7 +77,6 @@ case class Graph(board: Board)
     }
     else {
       val (real, virtual) = FDFS(idx).partition(_.length == 1)
-      //println("virtual: " + virtual)
       val redVCells = reduceVTrees(virtual)
       //println("redVCells: " + redVCells)
       Some(Board(real.flatten, redVCells, adj))
@@ -88,8 +88,9 @@ case class Graph(board: Board)
     * @param idx index of RCell to start traversal of [[Graph.vertexList]]
     * @return list of spanning trees consisting of connected RCells
     */
-  def FDFS(idx: Int): ListBuffer[ListBuffer[RCell]] = {
+  private def FDFS(idx: Int): ListBuffer[ListBuffer[RCell]] = {
 
+    //var spanningTrees: Vector[Vector[RCell]] = Vector()
     val spanningTrees: ListBuffer[ListBuffer[RCell]] = ListBuffer()
 
     for (i <- Range(idx, V + idx).map(_ % V)) {
@@ -97,6 +98,7 @@ case class Graph(board: Board)
         //println("visited: " + i)
         vertexList(i).visited = true
         val spanningTree = DFS(i)
+//        spanningTrees = spanningTrees :+ spanningTree
         spanningTrees += spanningTree
       }
     }
@@ -125,6 +127,7 @@ case class Graph(board: Board)
     val stack = new scala.collection.mutable.Stack[Int]
     stack.push(idx)
 
+    //var spanningTree: Vector[RCell] = Vector(vertexList(idx))
     val spanningTree: ListBuffer[RCell] = ListBuffer(vertexList(idx))
 
     while (stack.nonEmpty) {
@@ -133,6 +136,7 @@ case class Graph(board: Board)
         case Some(x) if x != V => {
           vertexList(x).visited = true
           //println(" and " + x)
+          //spanningTree = spanningTree :+ vertexList(x)
           spanningTree += vertexList(x)
           stack.push(x)
         }
@@ -140,7 +144,6 @@ case class Graph(board: Board)
         case None => stack.pop()
       }
     }
-    //println()
     spanningTree
   }
 

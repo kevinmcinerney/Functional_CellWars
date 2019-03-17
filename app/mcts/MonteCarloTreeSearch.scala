@@ -1,77 +1,144 @@
 package mcts
 
-import game.{Cell, RCell}
+import breeze.linalg.{max, min}
+import game.RandomGame
 import model.Board
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.parallel.ParSeq
 import scala.util.Random
 
 
 /**
   * Represents a studied node.
-  * @param board the [[model.Board]]
   * @param parent the parent node
   * @param subNodes the sub nodes
-  * @param nbVisit the number of visit
-  * @param score the score
   */
-class Node(val board: Board,
-           var player: Int,
-           val parent: Node = null,
-           var subNodes: Seq[Node] = Seq.empty,
-           var nbVisit: Int = 0,
-           var score: Double = 0)
+class Node(val state: State, val parent: Node = null, var subNodes: Seq[Node] = Seq.empty){
+
+  def this(node: Node) = {
+    this(node.state, node.parent)
+  }
+}
+
+class Tree(var root: Node)
+
+/**
+  * Represents a studied node.
+  * @param board the [[model.Board]]
+  * @param playerNo player number
+  * @param visitCount the number of visit
+  * @param winScore the score
+  */
+class State(val board: Board, var playerNo: Int, var visitCount: Int = 0, var winScore: Double = 0){
+
+  def opponent = 3 - playerNo
+
+  def getAllPossibleStates: Seq[State] = {
+    val playerCells = board.rCells.filter(_.marker == playerNo)
+    var state = ListBuffer[State]()
+
+    for(c <- playerCells) {
+      state  += new State(board.up(c.nucleus).get, opponent)
+      state  += new State(board.down(c.nucleus).get, opponent)
+      state  += new State(board.left(c.nucleus).get, opponent)
+      state  += new State(board.right(c.nucleus).get, opponent)
+    }
+    state
+  }
+
+  def randomPlay: Int = {
+    RandomGame.randomPlay(board)
+  }
+
+
+}
+
+object UCT {
+
+  def uctValue(totalVisit: Int, nodeWinScore: Double, nodeVisit: Int): Double = {
+    if(nodeVisit == 0) {
+      Int.MaxValue
+    }
+    else{
+      (nodeWinScore / nodeVisit) + 1.41 * Math.sqrt(Math.log(totalVisit) / nodeVisit)
+    }
+  }
+
+  def findBestNodeWithUCT(node: Node): Node = {
+    val parentVisit = node.state.visitCount
+    node.subNodes.maxBy(n => uctValue(parentVisit, n.state.winScore, n.state.visitCount))
+  }
+}
 
 /**
   * The Monte Carlo tree search implementation.
   */
-object MonteCarloTreeSearch {
+class MonteCarloTreeSearch {
 
   /** The random instance. */
   val random: Random = new Random(System.currentTimeMillis())
 
+  def bestMove(p_board: Board, p_playerNo: Int, results: ParSeq[Seq[Node]]): Int = {
+
+    results.toList.indices.foreach(core => {results(core).indices.foreach(node => {results(core)(node).state.board.edges.foreach(row => {row.foreach(print(_)); println()}); println(results(core)(node).state.board.vCells);println("NEXT BOARD")}); println();println("NEXT CORE")})
+
+    val team = p_board.rCells.filter(_.marker == p_playerNo)
+    val visits = new Array[Int](team.length*4)
+    val scores = new Array[Double](team.length*4)
+    for(core <- 0 until results.length;
+        res  <- 0 until team.length*4){
+        scores(res) += results(core)(res).state.winScore
+        visits(res) += results(core)(res).state.visitCount
+      }
+    val tuples = scores zip visits
+    val norm = normalize(tuples.map(tup => tup._1 / tup._2))
+    var r = ListBuffer[(String, Int, String)]()
+    norm.indices.foreach(idx => {
+      idx % 4 match {
+        case 0 => r += (("Up: Cell  ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
+        case 1 => r += (("Down: Cell  ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
+        case 2 => r += (("Left: Cell    ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
+        case 3 => r += (("Right: Cell ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
+      }
+    })
+    r.sortBy(_._3.length).foreach(r => println(r._1,r._2, r._3))
+    tuples.indexOf(tuples.maxBy(tup => tup._1 / tup._2))
+  }
+
   /**
     * Find best next move from the specified board and the max duration.<br/>
     * Implements the Monte Carlo Tree Search
-    * @param board the specified board
     * @param uctsTime the max duration
     * @return the best board
     */
-  def findNextMove(board: Board, uctsTime: Int, player: Int): Board = {
+  def findNextMove(board: Board, playerNo:Int, uctsTime: Int): Seq[Node] = {
+
     val end = System.currentTimeMillis() + uctsTime
-    val rootNode = new Node(board, player)
-    var nbTurn = 0
+    val state = new State(board, playerNo)
+    val rootNode = new Node(state)
+
+
     while (System.currentTimeMillis() < end) {
-      //println("starting..")
-      nbTurn += 1
-      val promiseNode = selectPromiseNode(rootNode)
-      //println("A..")
-      if (promiseNode.subNodes.isEmpty) {
+
+      val promiseNode: Node = selectPromiseNode(rootNode)
+
+      if (promiseNode.state.board.boardStatus == Board.IN_PROGRESS) {
         expandNode(promiseNode)
       }
-      //println("B..")
-      var nodeToExplore = promiseNode
+
+      var nodeToExplore: Node = promiseNode
+
       if (promiseNode.subNodes.nonEmpty) {
         nodeToExplore = promiseNode.subNodes(random.nextInt(promiseNode.subNodes.size))
       }
-      //println("C..")
-//      nodeToExplore.board.print()
-      //val t1: Long = System.currentTimeMillis()
-      val playoutResult = simulateRandomPlayout(nodeToExplore)
-      //val t2: Long = System.currentTimeMillis()
-      //println("Game took " + t2.-(t1))
 
-      //println("playoutResult " + playoutResult)
+      val playoutResult: Int = simulateRandomPlayout(nodeToExplore)
+
       backPropogation(nodeToExplore, playoutResult)
-      //println("playoutResult: " + playoutResult)
+
     }
-    val bestNode = rootNode.subNodes.maxBy(n => n.score.toDouble / n.nbVisit)
-    //logTree(rootNode)
-    //Console.err.println("rootNode.subNodes :\n\t" + rootNode.subNodes.map(s => (s.score, s.nbVisit)).mkString("\n\t"))
-    Console.err.println("bestNode.score = " + bestNode.score + " | Visited " + bestNode.nbVisit + " from a total of " + nbTurn + " = " + bestNode.score.toDouble / bestNode.nbVisit)
-    rootNode.subNodes.foreach(n => println(n.score / n.nbVisit))
-    println()
-    bestNode.board
+    rootNode.subNodes
   }
 
   /**
@@ -81,36 +148,23 @@ object MonteCarloTreeSearch {
     * @return the promise node
     */
   def selectPromiseNode(rootNode: Node): Node = {
-    //println("entering spn...")
     var node = rootNode
     while (node.subNodes.nonEmpty) {
-      val parentVisitScore = math.log(node.nbVisit)
-      node = node.subNodes.maxBy { subNode =>
-        if (subNode.nbVisit == 0) {
-          Int.MaxValue.toDouble
-        } else {
-          (1.41D * math.sqrt(parentVisitScore / subNode.nbVisit)) + (subNode.score.toDouble / subNode.nbVisit)
-        }
-      }
+      node = UCT.findBestNodeWithUCT(node)
     }
-    //println("leaving spn...")
     node
   }
+
+
 
   /**
     * Expand the specified node.
     * @param node the specified node
     */
   def expandNode(node: Node): Unit = {
-    //println("entering en..")
-    node.subNodes = node.board.getAllPossibleNextBoard(node.player)
-      .map{ board => {
-          new Node(board,
-            3 - node.player,
-            node)
-        }
-      }
-    //println("exiting en..")
+    val possibleStates = node.state.getAllPossibleStates
+    node.subNodes =
+    for(newState <- possibleStates) yield new Node(newState,node)
   }
 
   /**
@@ -119,55 +173,39 @@ object MonteCarloTreeSearch {
     * @return the score of the random game
     */
   def simulateRandomPlayout(node: Node): Int = {
-    if (node.board.boardStatus == 2) {
-      node.parent.score = Int.MinValue
-      -1
-    } else {
-      node.board.playout(node.board)
+    val tempNode = new Node(node)
+    val tempState = tempNode.state
+    val boardStatus = tempState.board.boardStatus
+    if(boardStatus == tempState.opponent){
+      tempNode.parent.state.winScore = Int.MinValue
+      boardStatus
+    }
+    else{
+      tempState.randomPlay
     }
   }
 
   /**
     * Update tree node (nbVisit and score) from the specified node with the specified game result
-    * @param node the specified node
-    * @param playout the specified game result
+    * @param nodeToExplore the specified node
+    * @param playerNo player number
     */
-  def backPropogation(node: Node, playout: Int): Unit = {
-    var currentNode = node
-    while (currentNode != null) {
-      currentNode.nbVisit += 1
-      if (currentNode.score != Int.MinValue) {
-        if (currentNode.player == 2) {
-          if (playout == 2) {
-            currentNode.score += 10
-          } else if (playout == 1) {
-            currentNode.score -= 1
-          } else {
-            currentNode.score += 0.5
-          }
-        } else {
-          if (playout == 1) {
-            currentNode.score += 10
-          } else if (playout == 2) {
-            currentNode.score -= 1
-          } else {
-            currentNode.score += 0.5
-          }
+  def backPropogation(nodeToExplore: Node, playerNo: Int): Unit = {
+    var tempNode = nodeToExplore
+    while (tempNode != null) {
+      tempNode.state.visitCount += 1
+      if (tempNode.state.playerNo == playerNo) {
+          tempNode.state.winScore += Board.WIN_SCORE
         }
+      tempNode = tempNode.parent
       }
-      currentNode = currentNode.parent
-    }
   }
 
-  /**
-    * Display in console.err the specified node with the specified prefix.
-    * @param node the specified node
-    * @param prefix the specified prefix
-    */
-  private def logTree(node: Node, prefix: String = ""): Unit = {
-    Console.err.println(prefix + "(" + node.board.toString + ") " + node.score + "/" + node.nbVisit)
-    val newPrefix = prefix + " "
-    node.subNodes.foreach(sn => logTree(sn, newPrefix))
+  def repeatChar(c: Char, n: Int): String = c.toString * n
+
+  def normalize(xs: Seq[Double]) = {
+    xs.map(x => (100 * (x - min(xs))) / (max(xs) - min(xs)))
   }
+
 }
 

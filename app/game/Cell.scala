@@ -11,6 +11,7 @@ import scala.collection.mutable.ListBuffer
   */
 sealed trait Cell {
 
+  def id: Int = -1
   def x1: Int
   def y1: Int
   def x2: Int
@@ -28,7 +29,7 @@ sealed trait Cell {
     * @return moved cell
     */
   def up: RCell = {
-    RCell(x1 + 0, y1 - 1, x2 + 0, y2 - 1, marker)
+    RCell(x1 + 0, y1 - 1, x2 + 0, y2 - 1, marker, id)
   }
 
   /**
@@ -36,7 +37,7 @@ sealed trait Cell {
     * @return moved cell
     */
   def down: RCell = {
-    RCell(x1 + 0, y1 + 1, x2 + 0, y2 + 1, marker)
+    RCell(x1 + 0, y1 + 1, x2 + 0, y2 + 1, marker, id)
   }
 
   /**
@@ -44,7 +45,7 @@ sealed trait Cell {
     * @return moved cell
     */
   def left: RCell = {
-    RCell(x1 - 1, y1 + 0, x2 - 1, y2 + 0, marker)
+    RCell(x1 - 1, y1 + 0, x2 - 1, y2 + 0, marker, id)
   }
 
   /**
@@ -52,7 +53,7 @@ sealed trait Cell {
     * @return moved cell
     */
   def right: RCell = {
-    RCell(x1 + 1, y1 + 0, x2 + 1, y2 + 0, marker)
+    RCell(x1 + 1, y1 + 0, x2 + 1, y2 + 0, marker, id)
   }
 
   /**
@@ -80,7 +81,7 @@ sealed trait Cell {
     * @return true if overlapping, else false
     */
   def contains(other: Cell): Boolean = {
-      if(x1 >= other.x2 || other.x1 >= x2) false
+    if(x1 >= other.x2 || other.x1 >= x2) false
     else if(y1 >= other.y2 || other.y1 >= y2 ) false
     else true
   }
@@ -127,7 +128,7 @@ sealed trait Cell {
     val topLeftY = min(y1, other.y1)
     val botRightX = max(x2, other.x2)
     val botRightY = max(y2, other.y2)
-    VCell(topLeftX, topLeftY,botRightX, botRightY, marker)
+    VCell(topLeftX, topLeftY,botRightX, botRightY, marker, id)
   }
 
 
@@ -135,7 +136,7 @@ sealed trait Cell {
     * Cell as a string
     * @return cell as a string
     */
-  override def toString: String = " ("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") " + " Team: " + marker
+  override def toString: String = " ("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") " + " Team: " + marker + " id:" + id
 }
 
 
@@ -146,7 +147,7 @@ sealed trait Vertex { var visited = false }
 
 
 /**  Real Cell **/
-case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) extends Cell with Vertex {
+case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int, override val id: Int = -1) extends Cell with Vertex {
 
   require(abs(x1 - x2) == 3 && abs(y1 - y2) == 3, "Not a real cell")
 
@@ -155,7 +156,7 @@ case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) ex
     * @param p_marker the team (1,2) to assign Cell
     * @return captured Cell
     */
-  def capture(p_marker: Int): Cell = RCell(x1,y1,x2,y2,p_marker)
+  def capture(p_marker: Int): Cell = RCell(x1,y1,x2,y2,p_marker,id)
 
 
   /**
@@ -169,13 +170,13 @@ case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) ex
     * Cell as a string
     * @return cell as a string
     */
-  override def toString: String = "r("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") " + " Team: " + marker
+  override def toString: String = "r("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") " + " Team: " + marker + " id:" + id
 }
 
 
 
 /**  Virtual Cell **/
-case class VCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) extends Cell {
+case class VCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int, override val id: Int = -1) extends Cell {
 
   require((abs(x1 - x2) >= 3 && abs(y1 - y2) >= 3) && area != 9, "Not a virtual cell")
 
@@ -185,13 +186,13 @@ case class VCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int) ex
     * @param p_marker the team (1,2) to assign Cell
     * @return captured Cell
     */
-  def capture(p_marker: Int): Cell = VCell(x1,y1,x2,y2,p_marker)
+  def capture(p_marker: Int): Cell = VCell(x1,y1,x2,y2,p_marker,id)
 
   /**
     * Cell as a string
     * @return cell as a string
     */
-  override def toString: String = "v("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") " + " Team: " + marker
+  override def toString: String = "v("+ x1 + "," + y1 + ")-(" + x2 + "," + y2 + ") " + " Team: " + marker + " id:" + id
 }
 
 

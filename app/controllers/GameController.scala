@@ -34,7 +34,7 @@ class GameController  @Inject() extends Controller {
 
     val teamOne = loadCells(0, numPerTeam, 1)
 
-    teamOne.update(0, RCell(34,2,37,5,1))
+    //teamOne.update(0, RCell(34,2,37,5,1))
 
     val teamTwo = loadCells(size - 3, numPerTeam, 2)
 

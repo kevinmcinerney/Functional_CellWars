@@ -5,26 +5,9 @@ import java.io.PrintStream
 import game.{Cell, Point, RCell, RandomGame}
 
 import scala.collection.mutable.ListBuffer
-import scala.util.{Failure, Random, Success, Try}
+import scala.util.{Failure, Success, Try}
 import Console.{BLACK_B, BLUE_B, MAGENTA_B, RED_B, RESET}
 
-
-/**
-  * Represents a state of the game
-  */
-trait BoardTrait {
-
-  /**
-    * Do a random play.
-    * @return the final score
-    */
-  def playout(board: Board): Int
-
-  /**
-    * @return all possible game state
-    */
-  def getAllPossibleNextBoard(player: Int): Seq[Board]
-}
 
 /**
   * Exception for invalid moves
@@ -39,7 +22,7 @@ class BadMoveException(msg: String) extends Exception(msg)
   * @param vCells the VCells on the board
   * @param edges  the graph of connections between rCells
   */
-case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Array[Array[Int]])  extends BoardTrait {
+case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Array[Array[Int]]) {
 
 
   /**
@@ -120,6 +103,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     rCellsCopy(idx) = fx(rCellsCopy(idx))
 
     rCellsCopy
+
   }
 
 
@@ -132,15 +116,17 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
   private def move(fx: RCell => RCell, idx: Int): Board = {
 
     // Move Real Cell
-    val rCellsCopy = moveCell(fx, idx)
+    val rCellsMoved = moveCell(fx, idx)
+
+    val boardCopy = Board(rCellsMoved, vCells, edges).cloneBoard
 
     // Pattern match graph
-    Graph(Board(rCellsCopy, vCells, edges)).update(idx)  match {
-        // Merges Needed
+    Graph(boardCopy).update(idx)  match {
+      // Merges Needed
       case Some(Board(unconnected, connected, newEdges)) =>
-        merge(newEdges, connected, unconnected, rCellsCopy, idx)
-        // No merges needed
-      case None => Board(rCellsCopy, vCells, edges)
+        merge(newEdges, connected, unconnected, rCellsMoved, idx)
+      // No merges needed
+      case None => boardCopy
     }
   }
 
@@ -150,21 +136,21 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param edges the graph of connections between RCells
     * @param connected the connected RCells in the graph which can form VCells
     * @param unconnected the unconnected RCells in the graph which cannot form VCells
-    * @param rCellsCopy copy of RCells of a board
+    * @param rCellsMoved moved RCells of a board
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return new Board after moved/merged RCell
     */
   private def merge(edges: Array[Array[Int]],
-            connected: ListBuffer[Cell],
-            unconnected: ListBuffer[RCell],
-            rCellsCopy: ListBuffer[RCell],
-            idx: Int): Board = {
+                    connected: ListBuffer[Cell],
+                    unconnected: ListBuffer[RCell],
+                    rCellsMoved: ListBuffer[RCell],
+                    idx: Int): Board = {
 
     // Get Virtual Cells
-    val vrMerged = rec(connected, unconnected, rCellsCopy, idx)
+    val vrMerged = rec(connected, unconnected, rCellsMoved, idx)
 
     // Capture Real Cells
-    val capturedRCells = capture(rCellsCopy, vrMerged, idx)
+    val capturedRCells = capture(rCellsMoved, vrMerged, idx)
 
     Board(capturedRCells, vrMerged, edges)
   }
@@ -199,17 +185,14 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @return list of RCells with captured cells assigned to other team
     */
   private def capture(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], idx: Int): ListBuffer[RCell] = {
-    val rCopy = rCells.clone()
-    for(i <- rCopy.indices) {
-      for (j <- vCells.indices) {
-        if (vCells(j) contains rCopy(i)) {
-          rCopy(i) = rCopy(i).capture(vCells(j).marker).asInstanceOf[RCell]
-        } else {
-          rCopy
-        }
-      }
+
+    val mutRCells = rCells
+    for(i <- rCells.indices;
+        j <- vCells.indices
+        if vCells(j) contains rCells(i)) {
+      mutRCells(i) = rCells(i).capture(vCells(j).marker).asInstanceOf[RCell]
     }
-    rCopy
+    mutRCells
   }
 
 
@@ -221,7 +204,9 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
   private def recMergeVirtualCells(vc: ListBuffer[Cell]): ListBuffer[Cell] = {
 
     val pairs = vc.combinations(2).to[ListBuffer]
+
     val merges = pairs.filter(p => p.head contains p.tail.head)
+
     if(merges.nonEmpty){
       val newVCells = merges.map(pair => pair.head merge pair.tail.head)
       merges.foreach(m => {vc -= m.head; vc -= m.tail.head} )
@@ -238,13 +223,13 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param oc list of outer Cells (incl. RCells & VCells)
     * @return list of VCells
     */
-  private def recMergeVirtualAndReal(mCell: RCell, vc: ListBuffer[Cell], oc: ListBuffer[Cell] ): ListBuffer[Cell] = {
+  private def recMergeVirtualAndReal(mCell: RCell, vc: ListBuffer[Cell], oc: ListBuffer[Cell]): ListBuffer[Cell] = {
     val pairs = vc.flatMap(v => oc.map(o => (v, o)))
     val newVCells: ListBuffer[Cell] =
-    for((left, right) <- pairs if left contains right) yield {
-      oc -= (left,right)
-      captureVCells(left, right, mCell)
-    }
+      for((left, right) <- pairs if left contains right) yield {
+        oc -= (left,right)
+        captureVCells(left,right,mCell)
+      }
     if(newVCells.nonEmpty) recMergeVirtualAndReal(mCell, recMergeVirtualCells(newVCells ++ vc), oc)
     else vc
   }
@@ -317,45 +302,23 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     rCells.exists(_.nucleus == cell.nucleus)
   }
 
+  //  def boardStatus: Int = {
+  //    val p1 = rCells.exists(_.marker == 1)
+  //    val p2 = rCells.exists(_.marker == 2)
+  //    if (p1 && p2) -1         // game in progress
+  //    else if ( !p2 ) 1        // player 1 win
+  //    else 2                   // opponent
+  //  }
+
   def boardStatus: Int = {
-    val p1 = rCells.exists(_.marker == 1)
-    val p2 = rCells.exists(_.marker == 2)
-    if (p1 && p2) -1         // game in progress
-    else if ( !p2 ) 1        // player 1 win
-    else 2                   // opponent
+    val p1 = rCells.exists(c => c.marker == 1 && (c.x2 > 19)) || rCells.forall(c => c.marker == Board.PLAYER1_WIN)
+    val p2 = rCells.exists(c => c.marker == 2 && c.x1 < 1) || rCells.forall(c => c.marker == Board.PLAYER2_WIN)
+    if (p1) Board.PLAYER1_WIN
+    else if (p2) Board.PLAYER2_WIN
+    else Board.IN_PROGRESS
   }
 
-//  def boardStatus: Int = {
-//    val p1 = rCells.exists(c => c.marker == 1 && c.x2 > 17)
-//    val p2 = rCells.exists(c => c.marker == 2 && c.x1 < 3)
-//    if (!p1 && !p2) -1         // game in progress
-//    else if ( p1 ) 1           // player 1 win
-//    else 2                     // opponent
-//  }
-
-  def playout(board: Board): Int = {
-
-    val r = board.rCells.clone()
-    val v = board.vCells.clone()
-    val e = board.edges.map(_.clone)
-    RandomGame.randomPlay(Board(r,v,e))
-    //println("Chceck board edges not changed..")
-    //e.foreach(e => {e.foreach(ee => System.out.print(ee)); println()})
-
-  }
-
-  def getAllPossibleNextBoard(player: Int): Seq[Board] = {
-    val playerCells = rCells.filter(_.marker==player)
-    val moves = new ListBuffer[Board]
-
-    for(c <- playerCells) {
-      moves += down(c.nucleus).get
-      moves += left(c.nucleus).get
-      moves += up(c.nucleus).get
-      moves += right(c.nucleus).get
-    }
-    moves
-  }
+  def cloneBoard = copy(edges = edges.map(_.clone))
 
   /**
     * make 2DArray from board
@@ -425,4 +388,9 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
 }
 
 
-object Board { }
+object Board {
+  val IN_PROGRESS = -1
+  val PLAYER1_WIN = 1
+  val PLAYER2_WIN = 2
+  val WIN_SCORE = 10
+}
