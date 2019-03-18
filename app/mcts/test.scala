@@ -1,23 +1,24 @@
-//package mcts
-//
-//import game.{Point, RCell, VCell}
-//import model.Board
-//
-//import scala.collection.mutable.ListBuffer
-//
-///**
-//  * Created by kevin on 15/03/19.
-//  */
-//object test extends App{
-//
-//
-//  /**
-//    * Assign new team to Cell
-//    * @param x_axis the x-axis on which to build team of Cells
-//    * @param teamSize number of Cells in a team
-//    * @param marker the team (1,2) to assign Cell
-//    * @return captured Cell
-//    */
+package mcts
+
+import game.{Point, RCell, VCell}
+import model.Board
+
+import scala.collection.mutable.ListBuffer
+import scala.collection.parallel.ParSeq
+
+/**
+  * Created by kevin on 15/03/19.
+  */
+object test extends App{
+
+
+  /**
+    * Assign new team to Cell
+    * @param x_axis the x-axis on which to build team of Cells
+    * @param teamSize number of Cells in a team
+    * @param marker the team (1,2) to assign Cell
+    * @return captured Cell
+    */
 //  def loadCells(x_axis: Int, teamSize: Int, marker: Int): ListBuffer[RCell] = {
 //    val start = if(marker == 1) 0  else teamSize
 //    for {
@@ -54,7 +55,30 @@
 //  board.print()
 //
 //  b2.get.edges.foreach(row => {row.foreach(i => print(i)); println()})
-//
-//
-//
-//}
+
+
+  case class Cell(list: ListBuffer[Int])
+
+  def changeCell(cell: Cell): Unit = {
+    var i = 0
+    while(i < 100000){
+      cell.list += i
+      i += 1
+    }
+    println(cell.list.length)
+  }
+
+    for(i <- (0 until Runtime.getRuntime.availableProcessors()).par) yield  changeCell(Cell(ListBuffer()))
+
+
+  //result.foreach(r => println(r.x)
+
+
+  // Prediction
+  // 8 values of 10000 because different Cells are passed to par seq
+
+
+
+
+
+}

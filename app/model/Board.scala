@@ -96,7 +96,8 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     */
   private def moveCell(fx: RCell => RCell, idx: Int): ListBuffer[RCell] = {
 
-    // Make Copy because is immutable
+    // Pure Function should return new rCells, but not alter
+    // the existing ones as a side effect.
     val rCellsCopy = rCells.clone()
 
     // Make move
@@ -118,6 +119,8 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     // Move Real Cell
     val rCellsMoved = moveCell(fx, idx)
 
+    // Function should return a new board, but not alter existing one
+    // as a side effect
     val boardCopy = Board(rCellsMoved, vCells, edges).cloneBoard
 
     // Pattern match graph
@@ -318,7 +321,12 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     else Board.IN_PROGRESS
   }
 
-  def cloneBoard = copy(edges = edges.map(_.clone))
+  def printEdges: Unit = {
+    println("  " + (0 to edges.length-1).mkString(""))
+    edges.indices.foreach(row => {System.out.print(row + " "); edges(row).foreach(i => System.out.print(i)); println()})
+  }
+
+  def cloneBoard = copy(rCells = rCells.clone(), vCells = vCells.clone(), edges = edges.map(_.clone))
 
   /**
     * make 2DArray from board

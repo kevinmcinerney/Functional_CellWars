@@ -81,7 +81,7 @@ class MonteCarloTreeSearch {
 
   def bestMove(p_board: Board, p_playerNo: Int, results: ParSeq[Seq[Node]]): Int = {
 
-    results.toList.indices.foreach(core => {results(core).indices.foreach(node => {results(core)(node).state.board.edges.foreach(row => {row.foreach(print(_)); println()}); println(results(core)(node).state.board.vCells);println("NEXT BOARD")}); println();println("NEXT CORE")})
+    //results.toList.indices.foreach(core => {results(core).indices.foreach(node => {results(core)(node).state.board.edges.foreach(row => {row.foreach(print(_)); println()}); println(results(core)(node).state.board.vCells);println("NEXT BOARD")}); println();println("NEXT CORE")})
 
     val team = p_board.rCells.filter(_.marker == p_playerNo)
     val visits = new Array[Int](team.length*4)
@@ -96,13 +96,13 @@ class MonteCarloTreeSearch {
     var r = ListBuffer[(String, Int, String)]()
     norm.indices.foreach(idx => {
       idx % 4 match {
-        case 0 => r += (("Up: Cell  ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
+        case 0 => r += (("Up: Cell    ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
         case 1 => r += (("Down: Cell  ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
-        case 2 => r += (("Left: Cell    ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
+        case 2 => r += (("Left: Cell  ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
         case 3 => r += (("Right: Cell ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
       }
     })
-    r.sortBy(_._3.length).foreach(r => println(r._1,r._2, r._3))
+    //r.sortBy(_._3.length).foreach(r => println(r._1,r._2, r._3))
     tuples.indexOf(tuples.maxBy(tup => tup._1 / tup._2))
   }
 
@@ -118,7 +118,7 @@ class MonteCarloTreeSearch {
     val state = new State(board, playerNo)
     val rootNode = new Node(state)
 
-
+    var cnt = 0
     while (System.currentTimeMillis() < end) {
 
       val promiseNode: Node = selectPromiseNode(rootNode)
@@ -137,6 +137,7 @@ class MonteCarloTreeSearch {
 
       backPropogation(nodeToExplore, playoutResult)
 
+      cnt += 1
     }
     rootNode.subNodes
   }

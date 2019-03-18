@@ -1,7 +1,7 @@
 package game
 import model.Board
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.util.{Failure, Random, Success, Try}
 import java.net.ServerSocket
 import java.io.PrintStream
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 import mcts.{MonteCarloTreeSearch, Node}
 
 import scala.collection.JavaConverters._
-import scala.collection.parallel.ParSeq
+import scala.collection.parallel.{ForkJoinTaskSupport, ParSeq}
 import scala.collection.parallel.mutable.ParArray
 
 /**
@@ -102,14 +102,18 @@ object SocketGame extends App {
         while(board.boardStatus == Board.IN_PROGRESS){
           for((n, u) <- users) {
 
+//            println("  " + (0 to board.rCells.length-1).mkString(""))
             board.print(u.out)
             u.out.println()
 
             val t1 = System.currentTimeMillis()
 
-            val result: ParSeq[Seq[Node]] = //new MonteCarloTreeSearch().findNextMove(board, player, 1000)
-              for(i <- (0 until numCores).par) yield  new MonteCarloTreeSearch().findNextMove(board, player, 2000)
+            val loop = (0 until numCores).par
 
+            loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(8))
+
+            val result: ParSeq[Seq[Node]] =
+              for(i <- loop) yield  new MonteCarloTreeSearch().findNextMove(board, player, 2000)
 
             val idx = new MonteCarloTreeSearch().bestMove(board, player, result)
 
@@ -154,7 +158,7 @@ object SocketGame extends App {
 
 
             val t2 = System.currentTimeMillis()
-            println("Took: " + (t2 -t1)/1000.0/60.0 +  " minutes")
+            println("Took: " + (t2 -t1)/1000.0 +  " seconds")
 
               //========================================================
 

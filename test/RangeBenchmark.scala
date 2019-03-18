@@ -3,7 +3,7 @@ import mcts.{MonteCarloTreeSearch, Node}
 import model.Board
 import org.scalameter._
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.collection.parallel.ParSeq
 import scala.collection.parallel.mutable.ParArray
 

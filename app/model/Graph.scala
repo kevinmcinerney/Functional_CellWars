@@ -11,9 +11,9 @@ import scala.collection.mutable.ListBuffer
 case class Graph(board: Board)
 {
 
-  val b = board.cloneBoard
+  val b = board
 
-  val adj = b.edges // clone because mutable // graph changes are only for new child board
+  val adj = b.edges
 
   val vertexList = b.rCells
 
@@ -77,8 +77,13 @@ case class Graph(board: Board)
     }
     else {
       val (real, virtual) = FDFS(idx).partition(_.length == 1)
+//      println("  " + (0 to vertexList.length-1).mkString(""))
+//      adj.indices.foreach(row => {print(row + " "); adj(row).foreach(i => print(i)); println()})
+//      virtual.foreach(list => {list.foreach(v => print(v.id + "=>")); print("  ")})
+//      println()
+//      println()
       val redVCells = reduceVTrees(virtual)
-      //println("redVCells: " + redVCells)
+      //Board(vertexList, redVCells, adj).print()
       Some(Board(real.flatten, redVCells, adj))
     }
   }

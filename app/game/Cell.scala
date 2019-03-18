@@ -122,7 +122,6 @@ sealed trait Cell {
     * @return merged Cell
     */
   def merge(other: Cell): Cell = {
-    //println(this + " with " + other)
     assert(this contains  other, "Shouldn't be merged")
     val topLeftX = min(x1, other.x1)
     val topLeftY = min(y1, other.y1)
