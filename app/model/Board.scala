@@ -22,7 +22,7 @@ class BadMoveException(msg: String) extends Exception(msg)
   * @param vCells the VCells on the board
   * @param edges  the graph of connections between rCells
   */
-case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Array[Array[Int]]) {
+case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vector[Int]]) {
 
 
   /**
@@ -94,16 +94,9 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return new copy of [[Board.rCells]] with moved RCell
     */
-  private def moveCell(fx: RCell => RCell, idx: Int): ListBuffer[RCell] = {
+  private def moveCell(fx: RCell => RCell, idx: Int): Vector[RCell] = synchronized {
 
-    // Pure Function should return new rCells, but not alter
-    // the existing ones as a side effect.
-    val rCellsCopy = rCells.clone()
-
-    // Make move
-    rCellsCopy(idx) = fx(rCellsCopy(idx))
-
-    rCellsCopy
+    rCells.updated(idx, fx(rCells(idx)))
 
   }
 
@@ -114,14 +107,14 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return new Board with moved/merged RCell
     */
-  private def move(fx: RCell => RCell, idx: Int): Board = {
+  private def move(fx: RCell => RCell, idx: Int): Board = synchronized {
 
     // Move Real Cell
     val rCellsMoved = moveCell(fx, idx)
 
     // Function should return a new board, but not alter existing one
     // as a side effect
-    val boardCopy = Board(rCellsMoved, vCells, edges).cloneBoard
+    val boardCopy = Board(rCellsMoved, vCells, edges)
 
     // Pattern match graph
     Graph(boardCopy).update(idx)  match {
@@ -131,6 +124,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
       // No merges needed
       case None => boardCopy
     }
+
   }
 
 
@@ -143,11 +137,11 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return new Board after moved/merged RCell
     */
-  private def merge(edges: Array[Array[Int]],
-                    connected: ListBuffer[Cell],
-                    unconnected: ListBuffer[RCell],
-                    rCellsMoved: ListBuffer[RCell],
-                    idx: Int): Board = {
+  private def merge(edges: Vector[Vector[Int]],
+                    connected: Vector[Cell],
+                    unconnected: Vector[RCell],
+                    rCellsMoved: Vector[RCell],
+                    idx: Int): Board = synchronized {
 
     // Get Virtual Cells
     val vrMerged = rec(connected, unconnected, rCellsMoved, idx)
@@ -167,13 +161,16 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return List of new Virtual Cells
     */
-  private def rec(connected: ListBuffer[Cell], unconnected: ListBuffer[RCell], rCellsCopy: ListBuffer[RCell], idx: Int): ListBuffer[Cell] = {
+  private def rec(connected: Vector[Cell],
+                  unconnected: Vector[RCell],
+                  rCellsCopy: Vector[RCell],
+                  idx: Int): Vector[Cell] = synchronized{
 
     // Recursively merge V-V until no change
     val redVCells = recMergeVirtualCells(connected)
 
     // Recursively merge V-R until no change
-    val vrMerged = recMergeVirtualAndReal(rCellsCopy(idx), redVCells, unconnected.asInstanceOf[ListBuffer[Cell]])
+    val vrMerged = recMergeVirtualAndReal(rCellsCopy(idx), redVCells, unconnected.asInstanceOf[Vector[Cell]])
 
     // Recursively call self until no change
     if(connected == vrMerged) connected else rec(vrMerged, unconnected, rCellsCopy, idx)
@@ -187,14 +184,15 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return list of RCells with captured cells assigned to other team
     */
-  private def capture(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], idx: Int): ListBuffer[RCell] = {
+  private def capture(rCells: Vector[RCell], vCells: Vector[Cell], idx: Int): Vector[RCell] = synchronized {
 
-    val mutRCells = rCells
-    for(i <- rCells.indices;
-        j <- vCells.indices
-        if vCells(j) contains rCells(i)) {
-      mutRCells(i) = rCells(i).capture(vCells(j).marker).asInstanceOf[RCell]
-    }
+    var mutRCells = rCells
+      for(i <- rCells.indices;
+          j <- vCells.indices
+          if vCells(j) contains rCells(i)) {
+        mutRCells = mutRCells.updated(i,rCells(i).capture(vCells(j).marker).asInstanceOf[RCell])
+      }
+
     mutRCells
   }
 
@@ -204,16 +202,18 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param vc the VCells to checked for self-merges
     * @return list of self merged VCells
     */
-  private def recMergeVirtualCells(vc: ListBuffer[Cell]): ListBuffer[Cell] = {
+  private def recMergeVirtualCells(vc: Vector[Cell]): Vector[Cell] = synchronized{
 
+    val vcc = new ListBuffer[Cell]()
+    vc.foreach((v: Cell) => vcc += v)
     val pairs = vc.combinations(2).to[ListBuffer]
 
     val merges = pairs.filter(p => p.head contains p.tail.head)
 
     if(merges.nonEmpty){
       val newVCells = merges.map(pair => pair.head merge pair.tail.head)
-      merges.foreach(m => {vc -= m.head; vc -= m.tail.head} )
-      recMergeVirtualCells(newVCells ++ vc)
+      merges.foreach(m => {vcc -= m.head; vcc -= m.tail.head} )
+      recMergeVirtualCells((newVCells ++ vcc).toVector)
     }
     else { vc }
   }
@@ -226,14 +226,17 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param oc list of outer Cells (incl. RCells & VCells)
     * @return list of VCells
     */
-  private def recMergeVirtualAndReal(mCell: RCell, vc: ListBuffer[Cell], oc: ListBuffer[Cell]): ListBuffer[Cell] = {
+  private def recMergeVirtualAndReal(mCell: RCell, vc: Vector[Cell], oc: Vector[Cell]): Vector[Cell] = synchronized{
+
+    val occ = new ListBuffer[Cell]()
+    oc.foreach((o: Cell) => occ += o)
     val pairs = vc.flatMap(v => oc.map(o => (v, o)))
-    val newVCells: ListBuffer[Cell] =
+    val newVCells: Vector[Cell] =
       for((left, right) <- pairs if left contains right) yield {
-        oc -= (left,right)
+        occ -= (left,right)
         captureVCells(left,right,mCell)
       }
-    if(newVCells.nonEmpty) recMergeVirtualAndReal(mCell, recMergeVirtualCells(newVCells ++ vc), oc)
+    if(newVCells.nonEmpty) recMergeVirtualAndReal(mCell, recMergeVirtualCells(newVCells ++ vc), occ.toVector)
     else vc
   }
 
@@ -245,7 +248,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param mCell the moved RCell whose team will capture the result of merge
     * @return Captured Cell with correct team assigned
     */
-  private def captureVCells(left: Cell, right: Cell, mCell: Cell): Cell = {
+  private def captureVCells(left: Cell, right: Cell, mCell: Cell): Cell = synchronized {
     val m = left merge right
     if(m contains mCell){
       m.capture(mCell.marker)
@@ -259,7 +262,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param nucleus point of RCell to be moved
     * @return int of RCell if valid move, else exception
     */
-  private def validateMove(fx: RCell => RCell, nucleus: Point): Try[Int] = {
+  private def validateMove(fx: RCell => RCell, nucleus: Point): Try[Int] = synchronized {
     val mover_idx = rCells.indexWhere(_.nucleus == nucleus)
     val mover = fx(rCells(mover_idx).copy())
     Try(
@@ -279,7 +282,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param cell cell to be evaluated
     * @return true if cell on board, sle false
     */
-  private def isValidCellState(cell: RCell): Boolean = {
+  private def isValidCellState(cell: RCell): Boolean = synchronized {
     onBoard(cell) && !isCollision(cell)
   }
 
@@ -289,7 +292,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param cell cell to be evaluated
     * @return true if cell on board, sle false
     */
-  private def onBoard(cell: Cell): Boolean = {
+  private def onBoard(cell: Cell): Boolean = synchronized {
     val inRange = (i: Int) => i >= 0 && i <= dimensions
     inRange(cell.x1) && inRange(cell.x2) &&
       inRange(cell.y1) && inRange(cell.y2)
@@ -301,7 +304,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     * @param cell cell to be evaluated
     * @return true if cell is colliding, else false
     */
-  private def isCollision(cell: RCell): Boolean = {
+  private def isCollision(cell: RCell): Boolean = synchronized {
     rCells.exists(_.nucleus == cell.nucleus)
   }
 
@@ -313,7 +316,7 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
   //    else 2                   // opponent
   //  }
 
-  def boardStatus: Int = {
+  def boardStatus: Int = synchronized {
     val p1 = rCells.exists(c => c.marker == 1 && (c.x2 > 19)) || rCells.forall(c => c.marker == Board.PLAYER1_WIN)
     val p2 = rCells.exists(c => c.marker == 2 && c.x1 < 1) || rCells.forall(c => c.marker == Board.PLAYER2_WIN)
     if (p1) Board.PLAYER1_WIN
@@ -321,47 +324,47 @@ case class Board(rCells: ListBuffer[RCell], vCells: ListBuffer[Cell], edges: Arr
     else Board.IN_PROGRESS
   }
 
-  def printEdges: Unit = {
+  def printEdges: Unit = synchronized {
     println("  " + (0 to edges.length-1).mkString(""))
     edges.indices.foreach(row => {System.out.print(row + " "); edges(row).foreach(i => System.out.print(i)); println()})
   }
 
-  def cloneBoard = copy(rCells = rCells.clone(), vCells = vCells.clone(), edges = edges.map(_.clone))
+  //def cloneBoard = copy(rCells = rCells.clone(), vCells = vCells.clone(), edges = edges.map(_.clone))
 
   /**
     * make 2DArray from board
     * @return 2DAarray from board
     */
-  def to2DArray: Array[Array[Int]] = {
+  def to2DArray: Vector[Array[Int]] = {
 
     val matrix = Array.fill[Int](dimensions,dimensions) { 0 }
 
-    def addReal(cells: ListBuffer[RCell]): Array[Array[Int]] ={
+    def addReal(cells: Array[RCell]): Vector[Array[Int]] ={
       for{ c <- cells
            p <- c.drawPoints
-      } matrix(p.y)(p.x) = c.marker
-      matrix
+      }  matrix(p.y)(p.x) = c.marker //matrix.updated(p.y, matrix(p.y).updated(p.x, c.marker))
+      matrix.toVector
     }
 
-    def addVirtual(cells: ListBuffer[Cell]): Array[Array[Int]] ={
+    def addVirtual(cells: Array[Cell]): Vector[Array[Int]] ={
       for{ c <- cells
            p <- c.drawPoints
-      } matrix(p.y)(p.x) = c.marker
-      matrix
+      } matrix(p.y)(p.x) = c.marker //matrix.updated(p.y, matrix(p.y).updated(p.x, c.marker))
+      matrix.toVector
     }
 
-    def addNucleus(cells: ListBuffer[RCell]): Array[Array[Int]] = {
+    def addNucleus(cells: Array[RCell]): Vector[Array[Int]] = {
       for{ c <- cells
-      } matrix(c.nucleus.y)(c.nucleus.x) = c.marker * 3
-      matrix
+      } matrix(c.nucleus.y)(c.nucleus.x) = c.marker * 3 //matrix.updated(c.nucleus.y, matrix(c.nucleus.y).updated(c.nucleus.x, c.marker * 3)) //matrix(c.nucleus.y)(c.nucleus.x) = c.marker * 3
+      matrix.toVector
 
     }
 
-    addReal(rCells)
+    addReal(rCells.toArray)
 
-    addVirtual(vCells)
+    addVirtual(vCells.toArray)
 
-    addNucleus(rCells)
+    addNucleus(rCells.toArray)
 
   }
 

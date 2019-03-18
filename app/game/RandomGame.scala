@@ -18,19 +18,19 @@ object RandomGame extends App {
     * @param marker the team (1,2) to assign Cell
     * @return captured Cell
     */
-  def loadCells(x: Int, teamSize: Int, marker: Int): ListBuffer[RCell] = {
+  def loadCells(x: Int, teamSize: Int, marker: Int): Vector[RCell] = {
 
     for {
       y <- 0 until (teamSize * 4) by 4
     } yield RCell(x, y, x + 3, y + 3, marker)
 
-  }.to[ListBuffer]
+  }.toVector
 
 
   /**
     * PLay out random games
     */
-  def randomPlay(board: Board): Int = {
+  def randomPlay(board: Board): Int = synchronized {
 
     var player = 1
 
@@ -72,8 +72,9 @@ object RandomGame extends App {
     * @param list list from which to select a random item
     * @return random int
     */
-  def getRandomElement(list: Seq[Int]): Int =
+  def getRandomElement(list: Seq[Int]): Int = synchronized {
     list(new Random().nextInt(list.length))
+  }
 
 
   val teamOne = loadCells(7, 5, 1)
@@ -84,9 +85,9 @@ object RandomGame extends App {
 
   val rCells = teamOne ++ teamTwo
 
-  val emptyAdj = Array.fill[Array[Int]](rCells.length)(Array.fill[Int](rCells.length)(0))
+  val emptyAdj = Vector.fill[Vector[Int]](rCells.length)(Vector.fill[Int](rCells.length)(0))
 
-  val board = Board(rCells, ListBuffer(), emptyAdj)
+  val board = Board(rCells, Vector(), emptyAdj)
 
   randomPlay(board: Board)
 

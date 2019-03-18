@@ -31,9 +31,9 @@ object SocketGame extends App {
 
   val rCells = loadCells(0, numPerTeam, 1) ++ loadCells(size - 3, numPerTeam, 2)
 
-  val Adj = Array.fill[Array[Int]](rCells.length)(Array.fill[Int](rCells.length)(0))
+  val Adj = Vector.fill[Vector[Int]](rCells.length)(Vector.fill[Int](rCells.length)(0))
 
-  var board = Board(rCells, ListBuffer(), Adj)
+  var board = Board(rCells, Vector(), Adj)
 
   val gameOver = false
 
@@ -108,11 +108,11 @@ object SocketGame extends App {
 
             val t1 = System.currentTimeMillis()
 
-            val loop = (0 until numCores).par
+            val loop = (0 until numCores)
 
-            loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(8))
+            //loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(8))
 
-            val result: ParSeq[Seq[Node]] =
+            val result: Seq[Seq[Node]] =
               for(i <- loop) yield  new MonteCarloTreeSearch().findNextMove(board, player, 2000)
 
             val idx = new MonteCarloTreeSearch().bestMove(board, player, result)
@@ -122,11 +122,11 @@ object SocketGame extends App {
 
             val bools1 = new ListBuffer[Boolean]()
             for(position <- 0 until result.length){
-              val v1 = result(0)(position).state.board.edges.deep == result(1)(position).state.board.edges.deep
-              val v2 = result(1)(position).state.board.edges.deep == result(2)(position).state.board.edges.deep
-              val v3 = result(2)(position).state.board.edges.deep == result(3)(position).state.board.edges.deep
-              val v4 = result(3)(position).state.board.edges.deep == result(4)(position).state.board.edges.deep
-              val v5 = result(5)(position).state.board.edges.deep == result(6)(position).state.board.edges.deep
+              val v1 = result(0)(position).state.board.edges == result(1)(position).state.board.edges
+              val v2 = result(1)(position).state.board.edges == result(2)(position).state.board.edges
+              val v3 = result(2)(position).state.board.edges == result(3)(position).state.board.edges
+              val v4 = result(3)(position).state.board.edges == result(4)(position).state.board.edges
+              val v5 = result(5)(position).state.board.edges == result(6)(position).state.board.edges
               bools1 += (v1 & v2 & v3 & v4 & v5)
             }
             println("Edges: " + bools1.forall(_==true))
@@ -273,14 +273,14 @@ object SocketGame extends App {
     * @param marker the team (1,2) to assign Cell
     * @return captured Cell
     */
-  def loadCells(x: Int, teamSize: Int, marker: Int): ListBuffer[RCell] = {
+  def loadCells(x: Int, teamSize: Int, marker: Int): Vector[RCell] = {
 
     val start = if(marker == 1) 0 else teamSize
     for {
       y <- 0 until (teamSize * 4) by 4
     } yield RCell(x, y, x + 3, y + 3, marker, (start + y/4))
 
-  }.to[ListBuffer]
+  }.toVector
 
 
 
