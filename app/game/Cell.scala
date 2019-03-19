@@ -1,4 +1,6 @@
 package game
+import java.util.concurrent.atomic.AtomicBoolean
+
 import breeze.linalg.{max, min}
 import breeze.numerics.abs
 
@@ -146,7 +148,7 @@ sealed trait Cell {
 
 
 /**  Vertex Trait **/
-sealed trait Vertex { var visited = false }
+sealed trait Vertex { var visited: AtomicBoolean = new AtomicBoolean(false) }
 
 
 

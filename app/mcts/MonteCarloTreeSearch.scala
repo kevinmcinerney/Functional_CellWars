@@ -34,7 +34,7 @@ case class State(val board: Board, var playerNo: Int, var visitCount: Int = 0, v
 
   def opponent = 3 - playerNo
 
-  def getAllPossibleStates: Seq[State] = synchronized {
+  def getAllPossibleStates: Seq[State] =  {
     val playerCells = board.rCells.filter(_.marker == playerNo)
     var state = ListBuffer[State]()
 
@@ -47,7 +47,7 @@ case class State(val board: Board, var playerNo: Int, var visitCount: Int = 0, v
     state
   }
 
-  def randomPlay: Int = synchronized {
+  def randomPlay: Int =  {
     RandomGame.randomPlay(board)
   }
 
@@ -56,7 +56,7 @@ case class State(val board: Board, var playerNo: Int, var visitCount: Int = 0, v
 
 object UCT {
 
-  def uctValue(totalVisit: Int, nodeWinScore: Double, nodeVisit: Int): Double = synchronized {
+  def uctValue(totalVisit: Int, nodeWinScore: Double, nodeVisit: Int): Double =  {
     if(nodeVisit == 0) {
       Int.MaxValue
     }
@@ -65,7 +65,7 @@ object UCT {
     }
   }
 
-  def findBestNodeWithUCT(node: Node): Node = synchronized {
+  def findBestNodeWithUCT(node: Node): Node =  {
     val parentVisit = node.state.visitCount
     node.subNodes.maxBy(n => uctValue(parentVisit, n.state.winScore, n.state.visitCount))
   }
@@ -79,7 +79,7 @@ case class MonteCarloTreeSearch() {
   /** The random instance. */
   val random: Random = new Random(System.currentTimeMillis())
 
-  def bestMove(p_board: Board, p_playerNo: Int, results: ParSeq[Seq[Node]]): Int = synchronized {
+  def bestMove(p_board: Board, p_playerNo: Int, results: ParSeq[Seq[Node]]): Int = {
 
     //results.toList.indices.foreach(core => {results(core).indices.foreach(node => {results(core)(node).state.board.edges.foreach(row => {row.foreach(print(_)); println()}); println(results(core)(node).state.board.vCells);println("NEXT BOARD")}); println();println("NEXT CORE")})
 
@@ -112,7 +112,7 @@ case class MonteCarloTreeSearch() {
     * @param uctsTime the max duration
     * @return the best board
     */
-  def findNextMove(board: Board, playerNo:Int, uctsTime: Int): Seq[Node] = synchronized {
+  def findNextMove(board: Board, playerNo:Int, uctsTime: Int): Seq[Node] =  {
 
     val end = System.currentTimeMillis() + uctsTime
     val state = State(board, playerNo)
@@ -148,7 +148,7 @@ case class MonteCarloTreeSearch() {
     * @param rootNode the root node
     * @return the promise node
     */
-  def selectPromiseNode(rootNode: Node): Node = synchronized {
+  def selectPromiseNode(rootNode: Node): Node =  {
     var node = rootNode
     while (node.subNodes.nonEmpty) {
       node = UCT.findBestNodeWithUCT(node)
@@ -162,7 +162,7 @@ case class MonteCarloTreeSearch() {
     * Expand the specified node.
     * @param node the specified node
     */
-  def expandNode(node: Node): Unit = synchronized {
+  def expandNode(node: Node): Unit =  {
     val possibleStates = node.state.getAllPossibleStates
     node.subNodes =
     for(newState <- possibleStates) yield new Node(newState,node)
@@ -173,7 +173,7 @@ case class MonteCarloTreeSearch() {
     * @param node the specified node
     * @return the score of the random game
     */
-  def simulateRandomPlayout(node: Node): Int = synchronized {
+  def simulateRandomPlayout(node: Node): Int =  {
     val tempNode = new Node(node)
     val tempState = tempNode.state
     val boardStatus = tempState.board.boardStatus
@@ -191,7 +191,7 @@ case class MonteCarloTreeSearch() {
     * @param nodeToExplore the specified node
     * @param playerNo player number
     */
-  def backPropogation(nodeToExplore: Node, playerNo: Int): Unit = synchronized {
+  def backPropogation(nodeToExplore: Node, playerNo: Int): Unit =  {
     var tempNode = nodeToExplore
     while (tempNode != null) {
       tempNode.state.visitCount += 1

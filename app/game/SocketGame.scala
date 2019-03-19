@@ -121,16 +121,16 @@ object SocketGame extends App {
             board = result.head(idx).state.board
 
 
-            val bools1 = new ListBuffer[Boolean]()
-            for(position <- 0 until result.length){
-              val v1 = result(0)(position).state.board.edges == result(1)(position).state.board.edges
-              val v2 = result(1)(position).state.board.edges == result(2)(position).state.board.edges
-              val v3 = result(2)(position).state.board.edges == result(3)(position).state.board.edges
-              val v4 = result(3)(position).state.board.edges == result(4)(position).state.board.edges
-              val v5 = result(5)(position).state.board.edges == result(6)(position).state.board.edges
-              bools1 += (v1 & v2 & v3 & v4 & v5)
-            }
-            println("Edges: " + bools1.forall(_==true))
+//            val bools1 = new ListBuffer[Boolean]()
+//            for(position <- 0 until result.length){
+//              val v1 = result(0)(position).state.board.edges == result(1)(position).state.board.edges
+//              val v2 = result(1)(position).state.board.edges == result(2)(position).state.board.edges
+//              val v3 = result(2)(position).state.board.edges == result(3)(position).state.board.edges
+//              val v4 = result(3)(position).state.board.edges == result(4)(position).state.board.edges
+//              val v5 = result(5)(position).state.board.edges == result(6)(position).state.board.edges
+//              bools1 += (v1 & v2 & v3 & v4 & v5)
+//            }
+//            println("Edges: " + bools1.forall(_==true))
 
 
             for(position <- 0 until result.head.length){
@@ -146,7 +146,7 @@ object SocketGame extends App {
               for(
                 i <- cores.indices;
                 j <- cores.indices
-              if j < i && cores(i) != cores(j)
+              //if j < i && cores(i) != cores(j)
               ){
                 println("cores: " + i + " and " + j + " for position: " + position)
                 println(cores(i))
@@ -157,25 +157,25 @@ object SocketGame extends App {
                 println("rCells: " + (result(i)(position).state.board.rCells == result(j)(position).state.board.rCells))
                 println("Edges: " + (result(i)(position).state.board.edges == result(j)(position).state.board.edges))
                 println("==========================")
-                result(i)(position).state.board.printEdges
-                println()
-                result(j)(position).state.board.printEdges
+//                result(i)(position).state.board.printEdges
+//                println()
+//                result(j)(position).state.board.printEdges
                 println("++========================")
               }
             }
 
 
 
-            val bools3 = new ListBuffer[Boolean]()
-            for(position <- 0 until result.head.length){
-              val v1 = result(0)(position).state.board.rCells == result(1)(position).state.board.rCells
-              val v2 = result(1)(position).state.board.rCells == result(2)(position).state.board.rCells
-              val v3 = result(2)(position).state.board.rCells == result(3)(position).state.board.rCells
-              val v4 = result(3)(position).state.board.rCells == result(4)(position).state.board.rCells
-              val v5 = result(5)(position).state.board.rCells == result(6)(position).state.board.rCells
-              bools3 += (v1 & v2 & v3 & v4 & v5)
-            }
-            println("rCells: " + bools3.forall(_==true))
+//            val bools3 = new ListBuffer[Boolean]()
+//            for(position <- 0 until result.head.length){
+//              val v1 = result(0)(position).state.board.rCells == result(1)(position).state.board.rCells
+//              val v2 = result(1)(position).state.board.rCells == result(2)(position).state.board.rCells
+//              val v3 = result(2)(position).state.board.rCells == result(3)(position).state.board.rCells
+//              val v4 = result(3)(position).state.board.rCells == result(4)(position).state.board.rCells
+//              val v5 = result(5)(position).state.board.rCells == result(6)(position).state.board.rCells
+//              bools3 += (v1 & v2 & v3 & v4 & v5)
+//            }
+//            println("rCells: " + bools3.forall(_==true))
 
 
 

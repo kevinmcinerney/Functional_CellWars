@@ -2,6 +2,10 @@ package mcts
 
 import game.{Point, RCell, VCell}
 import model.Board
+import org.apache.spark
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.{SparkConf, SparkContext}
+import org.graphframes.GraphFrame
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.parallel.ParSeq
@@ -44,65 +48,48 @@ object test extends App{
   val numCores = 7
 
 
-//  board.print()
-//  val b = board.down(Point(1,1)) // b has no edges
-//  b.get.print()
-//  val b2 = b.get.down(Point(1,2)) //
-//  b2.get.print()
-//  val b3 = b2.get.right(Point(1,3))
-//  b3.get.print()
-//
-//  board.print()
-//
-//  b2.get.edges.foreach(row => {row.foreach(i => print(i)); println()})
+
+  val spark = SparkSession.builder()
+    .master("local[8]")
+    .appName("CellWars")
+    .getOrCreate()
+  SparkSession.builder()
 
 
-//  case class Cell(list: ListBuffer[Int])
-//
-//  def changeCell(cell: Cell): Unit = {
-//    var i = 0
-//    while(i < 100000){
-//      cell.list += i
-//      i += 1
-//    }
-//    println(cell.list.length)
-//  }
-//
-//    for(i <- (0 until Runtime.getRuntime.availableProcessors()).par) yield  changeCell(Cell(ListBuffer()))
+  // Vertex DataFrame
+  val v = spark.sqlContext.createDataFrame(List(
+    ("a", "Alice", 34),
+    ("b", "Bob", 36),
+    ("c", "Charlie", 30),
+    ("d", "David", 29),
+    ("e", "Esther", 32),
+    ("f", "Fanny", 36),
+    ("g", "Gabby", 60)
+  )).toDF("id", "name", "age")
 
 
-  //result.foreach(r => println(r.x)
+  // Edge DataFrame
+  val e = spark.sqlContext.createDataFrame(List(
+    ("a", "b", "friend"),
+    ("b", "c", "follow"),
+    ("c", "b", "follow"),
+    ("f", "c", "follow"),
+    ("e", "f", "follow"),
+    ("e", "d", "friend"),
+    ("d", "a", "friend"),
+    ("a", "e", "friend")
+  )).toDF("src", "dst", "relationship")
 
 
-  // Prediction
-  // 8 values of 10000 because different Cells are passed to par seq
+  val g = GraphFrame(v, e)
+
+  g.vertices.show()
+
+  val result = g.connectedComponents.run() // doesn't work on Spark 1.4
+
+  result.show()
 
 
-//  val b1 = Board(Vector(RCell(1,1,4,4,1,1)), Vector(), Vector(Vector(1,1), Vector(2,2)))
-//
-//  val b2 = Board(Vector(RCell(1,1,4,4,1,1)), Vector(), Vector(Vector(1,1), Vector(2,2)))
-//
-//  val b3 = Board(Vector(RCell(1,1,4,4,1,1)), Vector(), Vector(Vector(1,1), Vector(2,3)))
-//
-////  println(b1 == b2)
-////
-////  println(b2 == b3)
-//
-  val t1 = Board(rCells,Vector(),Vector(Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 1, 0, 0), Vector(0, 0, 0, 0, 0, 0, 1, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
-//
-//  val t2 = Board(rCells,Vector(),Vector(Vector(0, 1, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 1, 0, 0), Vector(0, 0, 0, 0, 0, 0, 1, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Vector(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
-//
-//
-//  println(t1.edges == t2.edges)
-//  println(t1.rCells.toString(), t2.rCells.toString())
-//  println(t1.vCells == t2.vCells)
 
-  val s = State(t1,1)
-  val n = Node(s,null)
-
-  val t =
-  for(i <- Range(0,5).par) yield i
-
-  println(t)
 
 }

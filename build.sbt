@@ -22,3 +22,18 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.3.1"
 resolvers += "Sonatype OSS Snapshots" at
   "https://oss.sonatype.org/content/repositories/snapshots"
 libraryDependencies += "com.storm-enroute" %% "scalameter-core" % "0.6"
+
+resolvers += "bintray-spark-packages" at "https://dl.bintray.com/spark-packages/maven/"
+
+val sparkVersion = "2.1.0"
+
+libraryDependencies += "org.apache.spark" %% "spark-core" % sparkVersion
+libraryDependencies += "org.apache.spark" %% "spark-sql" % sparkVersion
+libraryDependencies += "graphframes" % "graphframes" % "0.7.0-spark2.4-s_2.11"
+libraryDependencies += "org.apache.spark" %% "spark-graphx" % sparkVersion
+
+
+
+
+
+

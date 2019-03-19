@@ -1,6 +1,7 @@
 package model
 
 import game.{Cell, RCell, VCell}
+import mcts.Node
 
 import scala.collection.mutable.ListBuffer
 
@@ -102,15 +103,15 @@ case class Graph(board: Board)
     val spanningTrees: ListBuffer[Vector[RCell]] = ListBuffer()
 
     for (i <- Range(idx, V + idx).map(_ % V)) {
-      if (!vertexList(i).visited) {
+      if (vertexList(i).visited.get() == false) {
         //println("visited: " + i)
-        vertexList(i).visited = true
+        vertexList(i).visited.set(true)
         val spanningTree = DFS(tempAdj, i)
         spanningTrees += spanningTree
       }
     }
 
-    vertexList.foreach { v => v.visited = false }
+    vertexList.foreach { v => v.visited.set(false) }
 
 
     spanningTrees.toVector
@@ -143,7 +144,7 @@ case class Graph(board: Board)
       val idx = getUnvisitedVertex(tempAdj, stack.top)
       idx match {
         case Some(x) if x != V => {
-          vertexList(x).visited = true
+          vertexList(x).visited .set(true)
           //println(" and " + x)
 
           spanningTree += vertexList(x)
@@ -163,13 +164,23 @@ case class Graph(board: Board)
     */
   private def getUnvisitedVertex(tempAdj: Vector[Vector[Int]],idx: Int): Option[Int] =  {
     var i = 0
-    while (i < V && !(tempAdj(idx)(i) == 1 && !vertexList(i).visited)) {
+    while (i < V && !(tempAdj(idx)(i) == 1 && vertexList(i).visited.get() == false)) {
       {
         i += 1
       }
 
     }
     Some(i)
+  }
+
+
+
+  private def dfsFunctionalFold(current: Node, acc: Set[Node]): Set[Node] = {
+    current.edges.foldLeft(acc) {
+      (results, next) =>
+        if (results.contains(next)) results
+        else dfsFunctionalFold(next, results + current)
+    } + current
   }
 }
 
