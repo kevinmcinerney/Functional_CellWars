@@ -94,7 +94,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return new copy of [[Board.rCells]] with moved RCell
     */
-  private def moveCell(fx: RCell => RCell, idx: Int): Vector[RCell] = synchronized {
+  private def moveCell(fx: RCell => RCell, idx: Int): Vector[RCell] =  {
 
     rCells.updated(idx, fx(rCells(idx)))
 
@@ -107,7 +107,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return new Board with moved/merged RCell
     */
-  private def move(fx: RCell => RCell, idx: Int): Board = synchronized {
+  private def move(fx: RCell => RCell, idx: Int): Board =  {
 
     // Move Real Cell
     val rCellsMoved = moveCell(fx, idx)
@@ -141,7 +141,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
                     connected: Vector[Cell],
                     unconnected: Vector[RCell],
                     rCellsMoved: Vector[RCell],
-                    idx: Int): Board = synchronized {
+                    idx: Int): Board =  {
 
     // Get Virtual Cells
     val vrMerged = rec(connected, unconnected, rCellsMoved, idx)
@@ -164,7 +164,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
   private def rec(connected: Vector[Cell],
                   unconnected: Vector[RCell],
                   rCellsCopy: Vector[RCell],
-                  idx: Int): Vector[Cell] = synchronized{
+                  idx: Int): Vector[Cell] = {
 
     // Recursively merge V-V until no change
     val redVCells = recMergeVirtualCells(connected)
@@ -184,7 +184,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param idx index of cell to be moved in [[Board.rCells]]
     * @return list of RCells with captured cells assigned to other team
     */
-  private def capture(rCells: Vector[RCell], vCells: Vector[Cell], idx: Int): Vector[RCell] = synchronized {
+  private def capture(rCells: Vector[RCell], vCells: Vector[Cell], idx: Int): Vector[RCell] =  {
 
     var mutRCells = rCells
       for(i <- rCells.indices;
@@ -202,7 +202,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param vc the VCells to checked for self-merges
     * @return list of self merged VCells
     */
-  private def recMergeVirtualCells(vc: Vector[Cell]): Vector[Cell] = synchronized{
+  private def recMergeVirtualCells(vc: Vector[Cell]): Vector[Cell] = {
 
     val vcc = new ListBuffer[Cell]()
     vc.foreach((v: Cell) => vcc += v)
@@ -226,7 +226,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param oc list of outer Cells (incl. RCells & VCells)
     * @return list of VCells
     */
-  private def recMergeVirtualAndReal(mCell: RCell, vc: Vector[Cell], oc: Vector[Cell]): Vector[Cell] = synchronized{
+  private def recMergeVirtualAndReal(mCell: RCell, vc: Vector[Cell], oc: Vector[Cell]): Vector[Cell] = {
 
     val occ = new ListBuffer[Cell]()
     oc.foreach((o: Cell) => occ += o)
@@ -248,7 +248,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param mCell the moved RCell whose team will capture the result of merge
     * @return Captured Cell with correct team assigned
     */
-  private def captureVCells(left: Cell, right: Cell, mCell: Cell): Cell = synchronized {
+  private def captureVCells(left: Cell, right: Cell, mCell: Cell): Cell =  {
     val m = left merge right
     if(m contains mCell){
       m.capture(mCell.marker)
@@ -262,7 +262,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param nucleus point of RCell to be moved
     * @return int of RCell if valid move, else exception
     */
-  private def validateMove(fx: RCell => RCell, nucleus: Point): Try[Int] = synchronized {
+  private def validateMove(fx: RCell => RCell, nucleus: Point): Try[Int] =  {
     val mover_idx = rCells.indexWhere(_.nucleus == nucleus)
     val mover = fx(rCells(mover_idx).copy())
     Try(
@@ -282,7 +282,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param cell cell to be evaluated
     * @return true if cell on board, sle false
     */
-  private def isValidCellState(cell: RCell): Boolean = synchronized {
+  private def isValidCellState(cell: RCell): Boolean =  {
     onBoard(cell) && !isCollision(cell)
   }
 
@@ -292,7 +292,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param cell cell to be evaluated
     * @return true if cell on board, sle false
     */
-  private def onBoard(cell: Cell): Boolean = synchronized {
+  private def onBoard(cell: Cell): Boolean =  {
     val inRange = (i: Int) => i >= 0 && i <= dimensions
     inRange(cell.x1) && inRange(cell.x2) &&
       inRange(cell.y1) && inRange(cell.y2)
@@ -304,7 +304,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     * @param cell cell to be evaluated
     * @return true if cell is colliding, else false
     */
-  private def isCollision(cell: RCell): Boolean = synchronized {
+  private def isCollision(cell: RCell): Boolean =  {
     rCells.exists(_.nucleus == cell.nucleus)
   }
 
@@ -316,7 +316,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
   //    else 2                   // opponent
   //  }
 
-  def boardStatus: Int = synchronized {
+  def boardStatus: Int =  {
     val p1 = rCells.exists(c => c.marker == 1 && (c.x2 > 19)) || rCells.forall(c => c.marker == Board.PLAYER1_WIN)
     val p2 = rCells.exists(c => c.marker == 2 && c.x1 < 1) || rCells.forall(c => c.marker == Board.PLAYER2_WIN)
     if (p1) Board.PLAYER1_WIN
@@ -324,7 +324,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     else Board.IN_PROGRESS
   }
 
-  def printEdges: Unit = synchronized {
+  def printEdges: Unit =  {
     println("  " + (0 to edges.length-1).mkString(""))
     edges.indices.foreach(row => {System.out.print(row + " "); edges(row).foreach(i => System.out.print(i)); println()})
   }

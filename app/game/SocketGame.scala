@@ -109,10 +109,10 @@ object SocketGame extends App {
 
             val loop = (0 until numCores).par
 
-            loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(8))
+            loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(7))
 
             val result: ParSeq[Seq[Node]] =
-              for(i <- loop) yield  MonteCarloTreeSearch().findNextMove(board, player, 2000)
+              for(i <- loop) yield  MonteCarloTreeSearch().findNextMove(board, player, 100)
 
             val idx = MonteCarloTreeSearch().bestMove(board, player, result)
 
@@ -146,7 +146,7 @@ object SocketGame extends App {
               for(
                 i <- cores.indices;
                 j <- cores.indices
-              if j < i && cores(i) != cores(j) && position == idx
+              if j < i && cores(i) != cores(j)
               ){
                 println("cores: " + i + " and " + j + " for position: " + position)
                 println(cores(i))
@@ -157,12 +157,10 @@ object SocketGame extends App {
                 println("rCells: " + (result(i)(position).state.board.rCells == result(j)(position).state.board.rCells))
                 println("Edges: " + (result(i)(position).state.board.edges == result(j)(position).state.board.edges))
                 println("==========================")
-                board.print(u.out)
-                result(i)(position).state.board.print()
+                result(i)(position).state.board.printEdges
                 println()
-                result(j)(position).state.board.print()
+                result(j)(position).state.board.printEdges
                 println("++========================")
-                u.out.println()
               }
             }
 
