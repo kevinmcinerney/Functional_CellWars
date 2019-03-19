@@ -79,7 +79,7 @@ case class MonteCarloTreeSearch() {
   /** The random instance. */
   val random: Random = new Random(System.currentTimeMillis())
 
-  def bestMove(p_board: Board, p_playerNo: Int, results: Seq[Seq[Node]]): Int = synchronized {
+  def bestMove(p_board: Board, p_playerNo: Int, results: ParSeq[Seq[Node]]): Int = synchronized {
 
     //results.toList.indices.foreach(core => {results(core).indices.foreach(node => {results(core)(node).state.board.edges.foreach(row => {row.foreach(print(_)); println()}); println(results(core)(node).state.board.vCells);println("NEXT BOARD")}); println();println("NEXT CORE")})
 

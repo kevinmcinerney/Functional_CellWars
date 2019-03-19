@@ -102,20 +102,21 @@ object SocketGame extends App {
         while(board.boardStatus == Board.IN_PROGRESS){
           for((n, u) <- users) {
 
-//            println("  " + (0 to board.rCells.length-1).mkString(""))
             board.print(u.out)
             u.out.println()
 
             val t1 = System.currentTimeMillis()
 
-            val loop = (0 until numCores)
+            val loop = (0 until numCores).par
 
-            //loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(8))
+            loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(8))
 
-            val result: Seq[Seq[Node]] =
-              for(i <- loop) yield  new MonteCarloTreeSearch().findNextMove(board, player, 2000)
+            val result: ParSeq[Seq[Node]] =
+              for(i <- loop) yield  MonteCarloTreeSearch().findNextMove(board, player, 2000)
 
-            val idx = new MonteCarloTreeSearch().bestMove(board, player, result)
+            val idx = MonteCarloTreeSearch().bestMove(board, player, result)
+
+            println(idx)
 
             board = result.head(idx).state.board
 
@@ -131,16 +132,40 @@ object SocketGame extends App {
             }
             println("Edges: " + bools1.forall(_==true))
 
-            val bools2 = new ListBuffer[Boolean]()
+
             for(position <- 0 until result.head.length){
-              val v1 = result(0)(position).state.board.vCells == result(1)(position).state.board.vCells
-              val v2 = result(1)(position).state.board.vCells == result(2)(position).state.board.vCells
-              val v3 = result(2)(position).state.board.vCells == result(3)(position).state.board.vCells
-              val v4 = result(3)(position).state.board.vCells == result(4)(position).state.board.vCells
-              val v5 = result(5)(position).state.board.vCells == result(6)(position).state.board.vCells
-              bools2 += (v1 & v2 & v3 & v4 & v5)
+              val v1 = result(0)(position).state.board.vCells
+              val v2 = result(1)(position).state.board.vCells
+              val v3 = result(2)(position).state.board.vCells
+              val v4 = result(3)(position).state.board.vCells
+              val v5 = result(4)(position).state.board.vCells
+              val v6 = result(5)(position).state.board.vCells
+              val v7 = result(6)(position).state.board.vCells
+              val cores = List(v1, v2, v3,v4 ,v5, v6, v7)
+
+              for(
+                i <- cores.indices;
+                j <- cores.indices
+              if j < i && cores(i) != cores(j) && position == idx
+              ){
+                println("cores: " + i + " and " + j + " for position: " + position)
+                println(cores(i))
+                println(cores(j))
+                println("==========================")
+                println("Boards: " + (result(i)(position).state.board == result(j)(position).state.board))
+                println("vCells: " + (result(i)(position).state.board.vCells == result(j)(position).state.board.vCells))
+                println("rCells: " + (result(i)(position).state.board.rCells == result(j)(position).state.board.rCells))
+                println("Edges: " + (result(i)(position).state.board.edges == result(j)(position).state.board.edges))
+                println("==========================")
+                board.print(u.out)
+                result(i)(position).state.board.print()
+                println()
+                result(j)(position).state.board.print()
+                println("++========================")
+                u.out.println()
+              }
             }
-            println("vCells: " + bools2.forall(_==true))
+
 
 
             val bools3 = new ListBuffer[Boolean]()

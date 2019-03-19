@@ -21,15 +21,17 @@ case class Graph(board: Board)
 
   val V = vertexList.length
 
+  def updateEdge(x: Int, y: Int, value: Int, edge: Vector[Vector[Int]]): Vector[Vector[Int]] = {
+    val upd1 = edge.updated(x, edge(x).updated(y, value))
+    upd1.updated(y, upd1(y).updated(x, value))
+  }
   /**
     * Add edges to graph representing connections between RCells
     * @param c1_idx index of RCell in [[Graph.vertexList]]
     * @param c2_idx index of RCell in [[Graph.vertexList]]
     */
   private def addEdge(p_adj:Vector[Vector[Int]], c1_idx: Int, c2_idx: Int): Vector[Vector[Int]] = synchronized {
-    val upd1 = p_adj.updated(c1_idx, p_adj(c1_idx).updated(c2_idx, 1))
-    upd1.updated(c2_idx, p_adj(c2_idx).updated(c1_idx, 1))
-
+    updateEdge(c1_idx,c2_idx, 1, p_adj)
   }
 
   /**
@@ -38,8 +40,7 @@ case class Graph(board: Board)
     * @param c2_idx index of RCell in [[Graph.vertexList]]
     */
   private def delEdge(p_adj:Vector[Vector[Int]], c1_idx: Int, c2_idx: Int): Vector[Vector[Int]] = synchronized {
-    val upd1 = p_adj.updated(c1_idx, p_adj(c1_idx).updated(c2_idx, 0))
-    upd1.updated(c2_idx, p_adj(c2_idx).updated(c1_idx, 0))
+    updateEdge(c1_idx, c2_idx, 0, p_adj)
   }
 
 
@@ -62,9 +63,9 @@ case class Graph(board: Board)
     // del edges with children
     var tempAdj = adj
     var deleted = false
-    for((con, child_idx) <- adj(idx).zipWithIndex if con == 1) {
+    for((con, child_idx) <- tempAdj(idx).zipWithIndex if con == 1) {
       synchronized{
-        tempAdj = delEdge(adj, child_idx, idx)
+        tempAdj = delEdge(tempAdj, child_idx, idx)
         deleted = true
       }
     }
@@ -85,13 +86,13 @@ case class Graph(board: Board)
     else {
       val (real, virtual) = FDFS(tempAdj,idx).partition(_.length == 1)
 //      println("  " + (0 to vertexList.length-1).mkString(""))
-//      adj.indices.foreach(row => {print(row + " "); adj(row).foreach(i => print(i)); println()})
-//      virtual.foreach(list => {list.foreach(v => print(v.id + "=>")); print("  ")})
+//      tempAdj.indices.foreach(row => {print(row + " "); tempAdj(row).foreach(i => print(i)); println()})
+//      virtual.foreach(list => {list.foreach(v => print(v + "=>")); println(" ")})
 //      println()
 //      println()
       val redVCells = reduceVTrees(virtual)
       //Board(vertexList, redVCells, adj).print()
-      Some(Board(real.flatten, redVCells, adj))
+      Some(Board(real.flatten, redVCells, tempAdj))
     }
   }
 
@@ -149,7 +150,7 @@ case class Graph(board: Board)
     val spanningTree: ListBuffer[RCell] = ListBuffer(vertexList(idx))
 
     while (stack.nonEmpty) {
-      val idx = getUnvisitedVertex(tempAdj,stack.top)
+      val idx = getUnvisitedVertex(tempAdj, stack.top)
       idx match {
         case Some(x) if x != V => {
           vertexList(x).visited = true

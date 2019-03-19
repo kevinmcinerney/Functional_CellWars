@@ -49,10 +49,10 @@ object RandomGame extends App {
 
       val movedBoard =
         selectedMove match {
-          case 2 => curBoard.down(curBoard.rCells(selectedCell).nucleus)
-          case 4 => curBoard.left(curBoard.rCells(selectedCell).nucleus)
-          case 6 => curBoard.right(curBoard.rCells(selectedCell).nucleus)
-          case 8 => curBoard.up(curBoard.rCells(selectedCell).nucleus)
+          case 2 => curBoard.down(curBoard.copy().rCells(selectedCell).nucleus)
+          case 4 => curBoard.left(curBoard.copy().rCells(selectedCell).nucleus)
+          case 6 => curBoard.right(curBoard.copy().rCells(selectedCell).nucleus)
+          case 8 => curBoard.up(curBoard.copy().rCells(selectedCell).nucleus)
         }
 
       curBoard =
