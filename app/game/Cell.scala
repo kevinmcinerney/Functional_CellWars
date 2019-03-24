@@ -148,14 +148,23 @@ sealed trait Cell {
 
 
 /**  Vertex Trait **/
-sealed trait Vertex { var visited: AtomicBoolean = new AtomicBoolean(false) }
+sealed trait Vertex { val edges: Vector[Int] }
 
 
 
 /**  Real Cell **/
-case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int, override val id: Int = -1) extends Cell with Vertex {
+case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int, override val id: Int = -1, override val edges: Vector[Int] = Vector())
+  extends Cell with Vertex {
 
   require(abs(x1 - x2) == 3 && abs(y1 - y2) == 3, "Not a real cell")
+
+  def addEdge(other: RCell): RCell = {
+    copy(edges = edges :+ other.id)
+  }
+
+  def delEdge(other: RCell): RCell = {
+    copy(edges = edges.filterNot(_ == other.id))
+  }
 
   /**
     * Assign new team to Cell

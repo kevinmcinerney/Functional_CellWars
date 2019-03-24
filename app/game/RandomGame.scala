@@ -42,7 +42,7 @@ object RandomGame extends App {
       val teamOne = curBoard.rCells.filter(_.marker == player)
       val end = teamOne.length
       val rnd = new scala.util.Random
-      val i = start + rnd.nextInt( (end - start) )
+      val i = start + rnd.nextInt( end - start )
       val selectedCell = curBoard.rCells.indexOf(teamOne(i))
 
       val selectedMove = getRandomElement(Seq(2, 4, 6, 8))
@@ -87,7 +87,7 @@ object RandomGame extends App {
 
   val emptyAdj = Vector.fill[Vector[Int]](rCells.length)(Vector.fill[Int](rCells.length)(0))
 
-  val board = Board(rCells, Vector(), emptyAdj)
+  val board = Board(rCells, Vector())
 
   randomPlay(board: Board)
 

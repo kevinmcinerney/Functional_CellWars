@@ -2,7 +2,7 @@ package model
 
 import java.io.PrintStream
 
-import game.{Cell, Point, RCell, RandomGame}
+import game.{Cell, Point, RCell}
 
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
@@ -20,9 +20,8 @@ class BadMoveException(msg: String) extends Exception(msg)
   * The Board representation.
   * @param rCells the RCells on the board
   * @param vCells the VCells on the board
-  * @param edges  the graph of connections between rCells
   */
-case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vector[Int]]) {
+case class Board(rCells: Vector[RCell], vCells: Vector[Cell]) {
 
 
   /**
@@ -89,117 +88,166 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
 
 
   /**
-    * Move Cell using fx in copy of [[Board.rCells]]
-    * @param fx function to move cell up, down, left or right
-    * @param idx index of cell to be moved in [[Board.rCells]]
-    * @return new copy of [[Board.rCells]] with moved RCell
+    * Add edges to cells after a move
+    * @param mover the moved cell
+    * @param rCellsMoved all cells, incl moved one
+    * @param mover_idx index of moved cell in rCellsMoved
+    * @return list of all cells with some edges added due to moved cell
     */
-  private def moveCell(fx: RCell => RCell, idx: Int): Vector[RCell] =  {
+  def getMovedRCellsWithEdges(mover: RCell, rCellsMoved: Vector[RCell], mover_idx: Int): Vector[RCell] = {
 
-    rCells.updated(idx, fx(rCells(idx)))
+    val vector =
+    rCellsMoved.foldLeft(Vector[RCell](mover)) {
+      (acc, next) =>
+        if (mover.id == next.id) {acc ++ Vector(next)}
+        else if (!(mover contains next) && !(acc contains next)) { acc ++ Vector(next) }
+        else {
+          val updated = acc.updated(0, acc(0).copy(edges = acc(0).edges :+ next.id))
+          updated ++ Vector(next.addEdge(mover))
+        }
+      }
+    vector.updated(mover_idx + 1, vector(0)).tail
+    }
 
+
+  /**
+    * Remove edges from cells after a move
+    * @param rCellsPreMove list of cells before move
+    * @param rCellsMoved list of cells after move
+    * @param mover_idx index of moved cell in rCellsMoved
+    * @return list of all cells some with edges removed due to moved cell
+    */
+  def getRCellsWithoutEdges(rCellsPreMove: Vector[RCell], rCellsMoved: Vector[RCell], mover_idx: Int): Vector[RCell] = {
+
+    val updated =
+      (for( i <- rCellsPreMove.indices;
+         temp =
+         if ((rCellsPreMove(i) contains rCellsPreMove(mover_idx)) && (i != mover_idx)) {
+           rCellsMoved(i).delEdge(rCellsPreMove(mover_idx))
+         }else{
+           rCellsMoved(i)
+         }
+    ) yield temp).toVector
+
+    if(updated.isEmpty) rCellsMoved else updated
   }
 
 
   /**
-    * Move Cell using fx on copy of [[Board.rCells]]
+    * Check is rCell inside any vCell
+    * @param rCell rCell to evalute
+    * @return true if rCell is inside of one of VCells
+    */
+  private def isInsideVCell(rCell: RCell, vCells: Vector[Cell]): Boolean =  {
+    vCells.exists(v => v contains rCell)
+  }
+
+
+  /**
+    * Move Cell using fx
     * @param fx function to move cell up, down, left or right
-    * @param idx index of cell to be moved in [[Board.rCells]]
+    * @param mover_idx index of cell to be moved in [[Board.rCells]]
     * @return new Board with moved/merged RCell
     */
-  private def move(fx: RCell => RCell, idx: Int): Board =  {
+  private def move(fx: RCell => RCell, mover_idx: Int): Board =  {
 
     // Move Real Cell
-    val rCellsMoved = moveCell(fx, idx)
+    val rCellsMoved = rCells.updated(mover_idx, fx(rCells(mover_idx)))
 
-    // Function should return a new board, but not alter existing one
-    // as a side effect
-    val boardCopy = Board(rCellsMoved, vCells, edges)
+    // Remove edges
+    val rCellsMovedWithoutEdges = getRCellsWithoutEdges(rCells, rCellsMoved, mover_idx)
 
-    // Pattern match graph
-    Graph(boardCopy).update(idx)  match {
+    // Add edges
+    val rCellsMovedWithEdges = getMovedRCellsWithEdges(rCellsMovedWithoutEdges(mover_idx), rCellsMovedWithoutEdges, mover_idx)
+
+    // Find Connected Components
+    Graph().update(rCellsMovedWithEdges,
+                   rCellsMovedWithEdges == rCellsMoved,
+                   isInsideVCell(rCellsMoved(mover_idx), vCells),
+                   mover_idx)  match {
       // Merges Needed
-      case Some(Board(unconnected, connected, newEdges)) =>
-        merge(newEdges, connected, unconnected, rCellsMoved, idx)
+      case Some(Board(free, connected)) =>
+        merge(connected, free, rCellsMovedWithEdges, mover_idx)
       // No merges needed
-      case None => boardCopy
+      case None => Board(rCellsMovedWithEdges, vCells)
     }
 
   }
 
 
   /**
-    * Merge all required VCells/RCells after a move
-    * @param edges the graph of connections between RCells
-    * @param connected the connected RCells in the graph which can form VCells
-    * @param unconnected the unconnected RCells in the graph which cannot form VCells
-    * @param rCellsMoved moved RCells of a board
-    * @param idx index of cell to be moved in [[Board.rCells]]
+    * Merge all required vCells/vCells after a move
+    * @param connected the connected rCells in the graph
+    * @param free the unconnected rCells in the graph
+    * @param allUpdatedCells moved rCells with all updated edges
+    * @param mover_idx index of moved cell
     * @return new Board after moved/merged RCell
     */
-  private def merge(edges: Vector[Vector[Int]],
-                    connected: Vector[Cell],
-                    unconnected: Vector[RCell],
-                    rCellsMoved: Vector[RCell],
-                    idx: Int): Board =  {
+  private def merge(connected: Vector[Cell],
+                    free: Vector[RCell],
+                    allUpdatedCells:  Vector[RCell],
+                    mover_idx: Int): Board =  {
 
     // Get Virtual Cells
-    val vrMerged = rec(connected, unconnected, rCellsMoved, idx)
+    val vrMerged = rec(connected, free, allUpdatedCells, mover_idx)
 
     // Capture Real Cells
-    val capturedRCells = capture(rCellsMoved, vrMerged, idx)
+    val capturedRCells = capture(allUpdatedCells, vrMerged, mover_idx)
 
-    Board(capturedRCells, vrMerged, edges)
+    Board(capturedRCells, vrMerged)
   }
 
 
   /**
     * Recursively 1) Merge virtual-virtual cells and 2) virtual-real cells until stable
-    * @param connected the connected RCells in the graph which can form VCells
-    * @param unconnected the unconnected RCells in the graph which cannot form VCells
-    * @param rCellsCopy copy of RCells of a board
-    * @param idx index of cell to be moved in [[Board.rCells]]
+    * @param connected the connected rCells in the graph
+    * @param free the unconnected rCells in the graph
+    * @param rCellsMovedWithEdges all cells moved with edges
+    * @param mover_idx index of cell to be moved in [[Board.rCells]]
     * @return List of new Virtual Cells
     */
   private def rec(connected: Vector[Cell],
-                  unconnected: Vector[RCell],
-                  rCellsCopy: Vector[RCell],
-                  idx: Int): Vector[Cell] = {
+                  free: Vector[RCell],
+                  rCellsMovedWithEdges:  Vector[RCell],
+                  mover_idx: Int): Vector[Cell] = {
 
     // Recursively merge V-V until no change
     val redVCells = recMergeVirtualCells(connected)
 
     // Recursively merge V-R until no change
-    val vrMerged = recMergeVirtualAndReal(rCellsCopy(idx), redVCells, unconnected.asInstanceOf[Vector[Cell]])
+    val vrMerged = recMergeVirtualAndReal(rCellsMovedWithEdges(mover_idx), redVCells, free.asInstanceOf[Vector[Cell]])
 
     // Recursively call self until no change
-    if(connected == vrMerged) connected else rec(vrMerged, unconnected, rCellsCopy, idx)
+    if(connected == vrMerged) connected else rec(vrMerged, free, rCellsMovedWithEdges, mover_idx)
   }
 
 
   /**
-    * Change team of RCells inside of expanded VCells
-    * @param rCells the RCells on the board
-    * @param vCells the VCells on the board
-    * @param idx index of cell to be moved in [[Board.rCells]]
-    * @return list of RCells with captured cells assigned to other team
+    * Change team of rCells inside of expanded vCells
+    * @param rCells the rCells on the board
+    * @param vCells the vCells on the board
+    * @param mover_idx index of cell to be moved
+    * @return list of cells with captured cells assigned to other team
     */
-  private def capture(rCells: Vector[RCell], vCells: Vector[Cell], idx: Int): Vector[RCell] =  {
+  private def capture(rCells: Vector[RCell], vCells: Vector[Cell], mover_idx: Int): Vector[RCell] =  {
 
-    var mutRCells = rCells
-      for(i <- rCells.indices;
-          j <- vCells.indices
-          if vCells(j) contains rCells(i)) {
-        mutRCells = mutRCells.updated(i,rCells(i).capture(vCells(j).marker).asInstanceOf[RCell])
-      }
-
-    mutRCells
+    val expandingVCell = vCells.find(_.contains(rCells(mover_idx)))
+    if (expandingVCell.nonEmpty){
+      (
+        for(i <- rCells.indices;
+            cell = if (expandingVCell.get contains rCells(i)) rCells(i).copy(marker = expandingVCell.get.marker)
+                   else rCells(i)
+        ) yield cell
+        ).toVector
+    }else{
+      rCells
+    }
   }
 
 
   /**
     * Recursively self merge virtual cells until stable
-    * @param vc the VCells to checked for self-merges
+    * @param vc the VCells to be checked for self-merges
     * @return list of self merged VCells
     */
   private def recMergeVirtualCells(vc: Vector[Cell]): Vector[Cell] = {
@@ -222,9 +270,9 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
   /**
     * Recursively merge VCells with RCells until stable
     * @param mCell the moved RCell
-    * @param vc list of VCells
-    * @param oc list of outer Cells (incl. RCells & VCells)
-    * @return list of VCells
+    * @param vc list of vCells
+    * @param oc list of outer Cells (incl. vCells & vCells)
+    * @return list of vCells
     */
   private def recMergeVirtualAndReal(mCell: RCell, vc: Vector[Cell], oc: Vector[Cell]): Vector[Cell] = {
 
@@ -308,28 +356,15 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell], edges: Vector[Vect
     rCells.exists(_.nucleus == cell.nucleus)
   }
 
-  //  def boardStatus: Int = {
-  //    val p1 = rCells.exists(_.marker == 1)
-  //    val p2 = rCells.exists(_.marker == 2)
-  //    if (p1 && p2) -1         // game in progress
-  //    else if ( !p2 ) 1        // player 1 win
-  //    else 2                   // opponent
-  //  }
 
   def boardStatus: Int =  {
-    val p1 = rCells.exists(c => c.marker == 1 && (c.x2 > 19)) || rCells.forall(c => c.marker == Board.PLAYER1_WIN)
+    val p1 = rCells.exists(c => c.marker == 1 && (c.x2 > this.dimensions-1)) || rCells.forall(c => c.marker == Board.PLAYER1_WIN)
     val p2 = rCells.exists(c => c.marker == 2 && c.x1 < 1) || rCells.forall(c => c.marker == Board.PLAYER2_WIN)
     if (p1) Board.PLAYER1_WIN
     else if (p2) Board.PLAYER2_WIN
     else Board.IN_PROGRESS
   }
 
-  def printEdges: Unit =  {
-    println("  " + (0 to edges.length-1).mkString(""))
-    edges.indices.foreach(row => {System.out.print(row + " "); edges(row).foreach(i => System.out.print(i)); println()})
-  }
-
-  //def cloneBoard = copy(rCells = rCells.clone(), vCells = vCells.clone(), edges = edges.map(_.clone))
 
   /**
     * make 2DArray from board

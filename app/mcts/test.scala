@@ -37,9 +37,9 @@ object test extends App{
 
   val rCells = loadCells(0, numPerTeam, 1) ++ loadCells(size - 3, numPerTeam, 2)
 
-  val Adj = Vector.fill[Vector[Int]](rCells.length)(Vector.fill[Int](rCells.length)(0))
+  //val Adj = Vector.fill[Vector[Int]](rCells.length)(Vector.fill[Int](rCells.length)(0))
 
-  var board = Board(rCells, Vector(), Adj)
+  var board = Board(rCells, Vector())
 
   val gameOver = false
 

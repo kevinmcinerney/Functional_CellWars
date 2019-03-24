@@ -14,7 +14,7 @@ import scala.util.Random
   * @param parent the parent node
   * @param subNodes the sub nodes
   */
-case class Node(val state: State, val parent: Node = null, var subNodes: Seq[Node] = Seq.empty){
+case class Node(state: State, parent: Node = null, var subNodes: Seq[Node] = Seq.empty){
 
   def this(node: Node) = {
     this(node.state, node.parent)
@@ -30,7 +30,7 @@ case class Tree(var root: Node)
   * @param visitCount the number of visit
   * @param winScore the score
   */
-case class State(val board: Board, var playerNo: Int, var visitCount: Int = 0, var winScore: Double = 0){
+case class State(board: Board, playerNo: Int, var visitCount: Int = 0, var winScore: Double = 0){
 
   def opponent = 3 - playerNo
 
@@ -39,10 +39,10 @@ case class State(val board: Board, var playerNo: Int, var visitCount: Int = 0, v
     var state = ListBuffer[State]()
 
     for(c <- playerCells) {
-      state  += new State(board.up(c.nucleus).get, opponent)
-      state  += new State(board.down(c.nucleus).get, opponent)
-      state  += new State(board.left(c.nucleus).get, opponent)
-      state  += new State(board.right(c.nucleus).get, opponent)
+      state  += State(board.up(c.nucleus).get, opponent)
+      state  += State(board.down(c.nucleus).get, opponent)
+      state  += State(board.left(c.nucleus).get, opponent)
+      state  += State(board.right(c.nucleus).get, opponent)
     }
     state
   }
@@ -81,8 +81,6 @@ case class MonteCarloTreeSearch() {
 
   def bestMove(p_board: Board, p_playerNo: Int, results: ParSeq[Seq[Node]]): Int = {
 
-    //results.toList.indices.foreach(core => {results(core).indices.foreach(node => {results(core)(node).state.board.edges.foreach(row => {row.foreach(print(_)); println()}); println(results(core)(node).state.board.vCells);println("NEXT BOARD")}); println();println("NEXT CORE")})
-
     val team = p_board.rCells.filter(_.marker == p_playerNo)
     val visits = new Array[Int](team.length*4)
     val scores = new Array[Double](team.length*4)
@@ -102,7 +100,7 @@ case class MonteCarloTreeSearch() {
         case 3 => r += (("Right: Cell ", team(idx/4).id, repeatChar('*', norm(idx).toInt)))
       }
     })
-    //r.sortBy(_._3.length).foreach(r => println(r._1,r._2, r._3))
+    r.sortBy(_._3.length).foreach(r => println(r._1,r._2, r._3))
     tuples.indexOf(tuples.maxBy(tup => tup._1 / tup._2))
   }
 
@@ -118,7 +116,6 @@ case class MonteCarloTreeSearch() {
     val state = State(board, playerNo)
     val rootNode = Node(state)
 
-    var cnt = 0
     while (System.currentTimeMillis() < end) {
 
       val promiseNode: Node = selectPromiseNode(rootNode)
@@ -130,14 +127,13 @@ case class MonteCarloTreeSearch() {
       var nodeToExplore: Node = promiseNode
 
       if (promiseNode.subNodes.nonEmpty) {
-        nodeToExplore = promiseNode.subNodes(random.nextInt(promiseNode.subNodes.size))
+        nodeToExplore = promiseNode.subNodes(random.nextInt(promiseNode.subNodes.size))  //heuristic here?
       }
 
       val playoutResult: Int = simulateRandomPlayout(nodeToExplore)
 
       backPropogation(nodeToExplore, playoutResult)
 
-      cnt += 1
     }
     rootNode.subNodes
   }
@@ -165,7 +161,7 @@ case class MonteCarloTreeSearch() {
   def expandNode(node: Node): Unit =  {
     val possibleStates = node.state.getAllPossibleStates
     node.subNodes =
-    for(newState <- possibleStates) yield new Node(newState,node)
+    for(newState <- possibleStates) yield Node(newState,node)
   }
 
   /**

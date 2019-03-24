@@ -25,15 +25,13 @@ import scala.collection.parallel.mutable.ParArray
   */
 object SocketGame extends App {
 
-  val size = 20
+  val size = 12
 
   val numPerTeam = size / 4
 
   val rCells = loadCells(0, numPerTeam, 1) ++ loadCells(size - 3, numPerTeam, 2)
 
-  val Adj = Vector.fill[Vector[Int]](rCells.length)(Vector.fill[Int](rCells.length)(0))
-
-  var board = Board(rCells, Vector(), Adj)
+  var board = Board(rCells, Vector())
 
   val gameOver = false
 
@@ -94,6 +92,8 @@ object SocketGame extends App {
     * start game between users
     */
   def startGame(user: Player): Unit = {
+    val loop = (0 until numCores).par
+    loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(8))
     nonblockingRead(user.in).foreach { input =>
       if(input == ":quit") {
         user.socket.close()
@@ -105,67 +105,48 @@ object SocketGame extends App {
             board.print(u.out)
             u.out.println()
 
-            val t1 = System.currentTimeMillis()
-
-            val loop = (0 until numCores).par
-
-            loop.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(7))
+            val t1 = System.nanoTime()
 
             val result: ParSeq[Seq[Node]] =
-              for(i <- loop) yield  MonteCarloTreeSearch().findNextMove(board, player, 100)
+              for(i <- loop) yield  MonteCarloTreeSearch().findNextMove(board, player, 180000)
 
             val idx = MonteCarloTreeSearch().bestMove(board, player, result)
-
-            println(idx)
 
             board = result.head(idx).state.board
 
 
-//            val bools1 = new ListBuffer[Boolean]()
-//            for(position <- 0 until result.length){
-//              val v1 = result(0)(position).state.board.edges == result(1)(position).state.board.edges
-//              val v2 = result(1)(position).state.board.edges == result(2)(position).state.board.edges
-//              val v3 = result(2)(position).state.board.edges == result(3)(position).state.board.edges
-//              val v4 = result(3)(position).state.board.edges == result(4)(position).state.board.edges
-//              val v5 = result(5)(position).state.board.edges == result(6)(position).state.board.edges
-//              bools1 += (v1 & v2 & v3 & v4 & v5)
+//            for(position <- 0 until result.head.length){
+//              val v1 = result(0)(position).state.board.vCells
+//              val v2 = result(1)(position).state.board.vCells
+//              val v3 = result(2)(position).state.board.vCells
+//              val v4 = result(3)(position).state.board.vCells
+//              val v5 = result(4)(position).state.board.vCells
+//              val v6 = result(5)(position).state.board.vCells
+//              val v7 = result(6)(position).state.board.vCells
+//              val cores = List(v1, v2, v3,v4 ,v5, v6, v7)
+//
+//              for(
+//                i <- cores.indices;
+//                j <- cores.indices
+//              if j < i && cores(i) != cores(j)
+//              ){
+//                println("cores: " + i + " and " + j + " for position: " + position)
+//                println(cores(i))
+//                println(cores(j))
+//                println("==========================")
+//                println("Boards: " + (result(i)(position).state.board == result(j)(position).state.board))
+//                println("vCells: " + (result(i)(position).state.board.vCells == result(j)(position).state.board.vCells))
+//                println("rCells: " + (result(i)(position).state.board.rCells == result(j)(position).state.board.rCells))
+//
+//                println("==========================")
+////                result(i)(position).state.board.printEdges
+////                println()
+////                result(j)(position).state.board.printEdges
+//                println("++========================")
+//              }
 //            }
-//            println("Edges: " + bools1.forall(_==true))
-
-
-            for(position <- 0 until result.head.length){
-              val v1 = result(0)(position).state.board.vCells
-              val v2 = result(1)(position).state.board.vCells
-              val v3 = result(2)(position).state.board.vCells
-              val v4 = result(3)(position).state.board.vCells
-              val v5 = result(4)(position).state.board.vCells
-              val v6 = result(5)(position).state.board.vCells
-              val v7 = result(6)(position).state.board.vCells
-              val cores = List(v1, v2, v3,v4 ,v5, v6, v7)
-
-              for(
-                i <- cores.indices;
-                j <- cores.indices
-              //if j < i && cores(i) != cores(j)
-              ){
-                println("cores: " + i + " and " + j + " for position: " + position)
-                println(cores(i))
-                println(cores(j))
-                println("==========================")
-                println("Boards: " + (result(i)(position).state.board == result(j)(position).state.board))
-                println("vCells: " + (result(i)(position).state.board.vCells == result(j)(position).state.board.vCells))
-                println("rCells: " + (result(i)(position).state.board.rCells == result(j)(position).state.board.rCells))
-                println("Edges: " + (result(i)(position).state.board.edges == result(j)(position).state.board.edges))
-                println("==========================")
-//                result(i)(position).state.board.printEdges
-//                println()
-//                result(j)(position).state.board.printEdges
-                println("++========================")
-              }
-            }
-
-
-
+//
+//
 //            val bools3 = new ListBuffer[Boolean]()
 //            for(position <- 0 until result.head.length){
 //              val v1 = result(0)(position).state.board.rCells == result(1)(position).state.board.rCells
@@ -178,13 +159,40 @@ object SocketGame extends App {
 //            println("rCells: " + bools3.forall(_==true))
 
 
+            val t2 = System.nanoTime()
+            println("Took: " + (t2 -t1) +  " seconds")
 
+            // ================================================================
+            board.print(u.out)
+            u.out.println()
 
-            val t2 = System.currentTimeMillis()
-            println("Took: " + (t2 -t1)/1000.0 +  " seconds")
+            player = if(player == 1) 2 else 1
+
+            val start = 0
+            val teamOne = board.rCells.filter(_.marker == player)
+            val end = teamOne.length
+            val rnd = new scala.util.Random
+            val i = start + rnd.nextInt( end - start )
+            val selectedCell = board.rCells.indexOf(teamOne(i))
+
+            val selectedMove = getRandomElement(Seq(2, 4, 6, 8))
+
+            val movedBoard =
+              selectedMove match {
+                case 2 => board.down(board.copy().rCells(selectedCell).nucleus)
+                case 4 => board.left(board.copy().rCells(selectedCell).nucleus)
+                case 6 => board.right(board.copy().rCells(selectedCell).nucleus)
+                case 8 => board.up(board.copy().rCells(selectedCell).nucleus)
+              }
+
+            board =
+              movedBoard match {
+                case Success(brd) => brd
+                case Failure(e) => board
+              }
 
               //========================================================
-
+//
 //              val selectedCell = getSelection(u.out, u.in, u.name, player)
 //
 //              val movedBoard = getMove(u.out, u.in, board, selectedCell)
@@ -195,29 +203,6 @@ object SocketGame extends App {
 //                  case Failure(e) => board
 //                }
               //===========================================
-
-//              val start = 0
-//              val teamOne = board.rCells.filter(_.marker==1)
-//              val end = teamOne.length
-//              val rnd = new scala.util.Random
-//              val i = start + rnd.nextInt( (end - start) )
-//              val selectedCell = board.rCells.indexOf(teamOne(i))
-//
-//              val selectedMove = getRandomElement(Seq(2, 4, 6, 8))
-//
-//              val movedBoard =
-//                selectedMove match {
-//                  case 2 => board.down(board.rCells(selectedCell).nucleus)
-//                  case 4 => board.left(board.rCells(selectedCell).nucleus)
-//                  case 6 => board.right(board.rCells(selectedCell).nucleus)
-//                  case 8 => board.up(board.rCells(selectedCell).nucleus)
-//                }
-//
-//              board =
-//                movedBoard match {
-//                  case Success(brd) => brd
-//                  case Failure(e) => board
-//                }
 
           }
           player = if(player == 1) 2 else 1
