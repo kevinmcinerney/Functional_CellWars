@@ -166,6 +166,14 @@ case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int, ov
     copy(edges = edges.filterNot(_ == other.id))
   }
 
+  def addEdge(other: Int): RCell = {
+    copy(edges = edges :+ other)
+  }
+
+  def delEdge(other: Int): RCell = {
+    copy(edges = edges.filterNot(_ == other))
+  }
+
   /**
     * Assign new team to Cell
     * @param p_marker the team (1,2) to assign Cell

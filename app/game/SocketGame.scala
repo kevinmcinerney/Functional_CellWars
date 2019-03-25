@@ -105,6 +105,36 @@ object SocketGame extends App {
             board.print(u.out)
             u.out.println()
 
+            val start = 0
+            val teamOne = board.rCells.filter(_.marker == player)
+            val end = teamOne.length
+            val rnd = new scala.util.Random
+            val i = start + rnd.nextInt( end - start )
+            val selectedCell = board.rCells.indexOf(teamOne(i))
+
+            val selectedMove = getRandomElement(Seq(2, 4, 6, 8))
+
+            val movedBoard =
+              selectedMove match {
+                case 2 => board.down(board.copy().rCells(selectedCell).nucleus)
+                case 4 => board.left(board.copy().rCells(selectedCell).nucleus)
+                case 6 => board.right(board.copy().rCells(selectedCell).nucleus)
+                case 8 => board.up(board.copy().rCells(selectedCell).nucleus)
+              }
+
+            board =
+              movedBoard match {
+                case Success(brd) => brd
+                case Failure(e) => board
+              }
+
+
+            board.print(u.out)
+            u.out.println()
+
+            player = if(player == 1) 2 else 1
+
+            //========================================================
             val t1 = System.nanoTime()
 
             val result: ParSeq[Seq[Node]] =
@@ -162,36 +192,7 @@ object SocketGame extends App {
             val t2 = System.nanoTime()
             println("Took: " + (t2 -t1) +  " seconds")
 
-            // ================================================================
-            board.print(u.out)
-            u.out.println()
 
-            player = if(player == 1) 2 else 1
-
-            val start = 0
-            val teamOne = board.rCells.filter(_.marker == player)
-            val end = teamOne.length
-            val rnd = new scala.util.Random
-            val i = start + rnd.nextInt( end - start )
-            val selectedCell = board.rCells.indexOf(teamOne(i))
-
-            val selectedMove = getRandomElement(Seq(2, 4, 6, 8))
-
-            val movedBoard =
-              selectedMove match {
-                case 2 => board.down(board.copy().rCells(selectedCell).nucleus)
-                case 4 => board.left(board.copy().rCells(selectedCell).nucleus)
-                case 6 => board.right(board.copy().rCells(selectedCell).nucleus)
-                case 8 => board.up(board.copy().rCells(selectedCell).nucleus)
-              }
-
-            board =
-              movedBoard match {
-                case Success(brd) => brd
-                case Failure(e) => board
-              }
-
-              //========================================================
 //
 //              val selectedCell = getSelection(u.out, u.in, u.name, player)
 //
