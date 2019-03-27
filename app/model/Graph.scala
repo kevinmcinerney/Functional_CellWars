@@ -4,7 +4,6 @@ import game.{Cell, RCell}
 
 /**
   * The Graph
-  * @param board the board to map onto graph
   */
 case class Graph() {
 

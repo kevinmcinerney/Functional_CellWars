@@ -124,11 +124,6 @@ sealed trait Cell {
     * @return merged Cell
     */
   def merge(other: Cell): Cell = {
-    //println(this + " with " + other)
-    if(!(this contains other)) {
-      Console.err.print(this + " \n" + other)
-    }
-
     assert(this contains  other, "Shouldn't be merged")
     val topLeftX = min(x1, other.x1)
     val topLeftY = min(y1, other.y1)
@@ -148,7 +143,18 @@ sealed trait Cell {
 
 
 /**  Vertex Trait **/
-sealed trait Vertex { val edges: Vector[Int] }
+sealed trait Vertex {
+
+  type A <: Vertex
+  type B = Int
+
+  val edges: Vector[B]
+
+  def addEdge(other: B): A
+
+  def delEdge(other: B): A
+
+}
 
 
 
@@ -156,22 +162,25 @@ sealed trait Vertex { val edges: Vector[Int] }
 case class RCell(x1: Int, y1: Int,x2: Int, y2: Int, override val marker: Int, override val id: Int = -1, override val edges: Vector[Int] = Vector())
   extends Cell with Vertex {
 
+  override type A = RCell
+
   require(abs(x1 - x2) == 3 && abs(y1 - y2) == 3, "Not a real cell")
 
-  def addEdge(other: RCell): RCell = {
-    copy(edges = edges :+ other.id)
-  }
 
-  def delEdge(other: RCell): RCell = {
-    copy(edges = edges.filterNot(_ == other.id))
-  }
-
-  def addEdge(other: Int): RCell = {
+  def addEdge(other: B): A = {
     copy(edges = edges :+ other)
   }
 
-  def delEdge(other: Int): RCell = {
+  def addEdges(other: B*): A = {
+    copy(edges = edges ++ other)
+  }
+
+  def delEdge(other: B): A = {
     copy(edges = edges.filterNot(_ == other))
+  }
+
+  def delEdges(other: B*): A = {
+    copy(edges = edges.filterNot(other.contains(_)))
   }
 
   /**

@@ -48,7 +48,7 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
 
 
 
-  val rCells_t2 = Vector(cell1, cell2, cell3.right.addEdge(cell4), cell4.addEdge(cell3).addEdge(cell5), cell5.addEdge(cell4), cell6,
+  val rCells_t2 = Vector(cell1, cell2, cell3.right.addEdge(3), cell4.addEdge(2).addEdge(4), cell5.addEdge(3), cell6,
                          cell7, cell8, cell9, cell10, cell11, cell12, cell13, cell14)
   val board_t2 = Board(rCells_t2, Vector(VCell(2, 3, 8, 10, 1)))
   println("board_t2: cell3 right")
@@ -65,8 +65,8 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
 
 
 
-  val rCells_t3b = Vector(cell1, cell2, cell3.right.addEdge(cell4), cell4.addEdge(cell3).addEdge(cell5), cell5.right.addEdge(cell4),
-                          cell6.right.addEdge(cell7), cell7.addEdge(cell6), cell8.capture(1).asInstanceOf[RCell], cell9, cell10, cell11, cell12, cell13, cell14)
+  val rCells_t3b = Vector(cell1, cell2, cell3.right.addEdge(3), cell4.addEdges(2,4), cell5.right.addEdge(3),
+                          cell6.right.addEdge(6), cell7.addEdge(5), cell8.capture(1).asInstanceOf[RCell], cell9, cell10, cell11, cell12, cell13, cell14)
   val board_t4 = Board(rCells_t3b, Vector(VCell(3, 0, 12, 12, 1, 2)))
   println("board_t4: Before Right-Right-Left-Left: cell3 right, cell5 right, cell6 right")
   board_t4.print()
@@ -248,9 +248,9 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
 
   val board_t1c = Board(rCells_t1, Vector())
 
-  val rCells_t2c = Vector(cell1.addEdge(cell3),
-                          cell2.addEdge(cell3),
-                          cell3.up.addEdge(cell1).addEdge(cell2),
+  val rCells_t2c = Vector(cell1.addEdge(2),
+                          cell2.addEdge(2),
+                          cell3.up.addEdges(0,1),
                           cell4, cell5, cell6, cell7,
                           cell8, cell9, cell10, cell11, cell12, cell13, cell14)
 
@@ -302,8 +302,8 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
 
   val rCells_t2e = Vector(cell1,
                           cell2,
-                          cell3.right.addEdge(cell4),
-                          cell4.addEdge(cell3),
+                          cell3.right.addEdge(3),
+                          cell4.addEdge(2),
                           cell5, cell6,
                           cell7, cell8, cell9, cell10, cell11, cell12, cell13, cell14)
 
@@ -328,13 +328,13 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
 
 
   val board_t1f = Board(Vector(RCell(0, 0, 3, 3, 1, 0).addEdge(1),
-                               RCell(2, 2, 5, 5, 1, 1).addEdge(0).addEdge(2),
+                               RCell(2, 2, 5, 5, 1, 1).addEdges(0,2),
                                RCell(4, 4, 7, 7, 1, 2).addEdge(1),
                                RCell(7, 0, 10, 3, 1, 3),
     cell9.copy(id=4), cell10.copy(id=5), cell11.copy(id=6), cell11.copy(id=7), cell11.copy(id=8), cell11.copy(id=9), cell11.copy(id=10)), Vector(VCell(0, 0, 7, 7, 1, 0)))
 
   val board_t1g = Board(Vector(RCell(0, 0, 3, 3, 1, 0).addEdge(1),
-                               RCell(2, 2, 5, 5, 1, 1).addEdge(0).addEdge(2),
+                               RCell(2, 2, 5, 5, 1, 1).addEdges(0,2),
                                RCell(4, 4, 7, 7, 1, 2).addEdge(1),
                                RCell(7, 0, 10, 3, 1, 3).left,
     cell9.copy(id=4), cell10.copy(id=5), cell11.copy(id=6), cell11.copy(id=7), cell11.copy(id=8), cell11.copy(id=9), cell11.copy(id=10)), Vector(VCell(0, 0, 9, 7, 1, 0)))
@@ -356,7 +356,7 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
 
 
   val board_t1h = Board(Vector(RCell(0, 6, 3, 9, 1, 0).addEdge(1),
-                               RCell(2, 8, 5, 11, 1, 1).addEdge(0).addEdge(2),
+                               RCell(2, 8, 5, 11, 1, 1).addEdges(0,2),
                                RCell(4, 10, 7, 13, 1, 2).addEdge(1),
                                RCell(6, 3, 9, 6, 1, 3),
     RCell(9, 5, 12, 8, 1, 4), cell9.copy(id=5), cell10.copy(id=6), cell11.copy(id=7), cell11.copy(id=8), cell11.copy(id=9), cell11.copy(id=10), cell11.copy(id=11)), Vector(VCell(0, 6, 7, 13, 1)))
@@ -377,14 +377,14 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
 
 
   val board_t1h2 = Board(Vector(RCell(0, 6, 3, 9, 1, 0).addEdge(1),
-                                RCell(2, 8, 5, 11, 1, 1).addEdge(0).addEdge(2),
+                                RCell(2, 8, 5, 11, 1, 1).addEdges(0,2),
                                 RCell(4, 10, 7, 13, 1, 2).addEdge(1),
                                 RCell(6, 3, 9, 6, 1, 3),
                                 RCell(9, 5, 12, 8, 1, 4),
     cell9.copy(id=5), cell10.copy(id=6), cell11.copy(id=7), cell11.copy(id=8), cell11.copy(id=9), cell11.copy(id=10), cell11.copy(id=11)), Vector(VCell(0, 6, 7, 13, 1, 0)))
 
   val board_t1i2 = Board(Vector(RCell(0, 6, 3, 9, 1, 0).addEdge(1),
-                                RCell(2, 8, 5, 11, 1, 1).addEdge(0).addEdge(2),
+                                RCell(2, 8, 5, 11, 1, 1).addEdges(0,2),
                                 RCell(4, 10, 7, 13, 1, 2).addEdge(1),
                                 RCell(6, 3, 9, 6, 1, 3).addEdge(4),
                                 RCell(9, 5, 12, 8, 1, 4).left.addEdge(3),
@@ -392,196 +392,235 @@ class GameSpec extends PlaySpec with PrivateMethodTester {
 
   "virtual - virtual merge " should {
     "happen for " in {
-      board_t1h2.left(Point(10, 6)).get.rCells.foreach(p => println(p, p.edges))
-      board_t1i2.rCells.foreach(p => println(p, p.edges))
 
       board_t1h2.left(Point(10, 6)).get.rCells mustEqual board_t1i2.rCells
       board_t1h2.left(Point(10, 6)).get.vCells mustEqual board_t1i2.vCells
     }
   }
-//
-//  val Adj8 = Vector.fill[Vector[Int]](12)(Vector.fill[Int](12)(0))
-//
-//  //  Adj8(1)(0) = 1
-////  Adj8(0)(1) = 1
-////  Adj8(2)(1) = 1
-////  Adj8(1)(2) = 1
-//
-//  val a12 = Graph(board_t1).updateEdge(1,0,1,Adj8)
-//  val a13 = Graph(board_t1).updateEdge(2,1,1,a12)
-//
-//  val board_t1j = Board(Vector(RCell(0, 6, 3, 9, 1), RCell(2, 8, 5, 11, 1), RCell(4, 10, 7, 13, 1), RCell(6, 3, 9, 6, 1),
-//    RCell(8, 5, 11, 8, 1), cell9, cell10, cell11, cell11, cell11, cell11, cell11), Vector(VCell(0, 3, 11, 13, 1)), a13)
-//  val board_t1k = Board(Vector(RCell(0, 6, 3, 9, 1), RCell(2, 8, 5, 11, 1), RCell(4, 10, 7, 13, 1), RCell(7, 3, 10, 6, 1),
-//    RCell(8, 5, 11, 8, 1), cell9, cell10, cell11, cell11, cell11, cell11, cell11), Vector(VCell(7, 3, 11, 8, 1), VCell(0, 6, 7, 13, 1)), a13)
-//
-//
-//  val a132 = Graph(board_t1).updateEdge(3,4,1,a13)
-//
-//  val board_t1j2 = Board(Vector(RCell(0, 6, 3, 9, 1), RCell(2, 8, 5, 11, 1), RCell(4, 10, 7, 13, 1), RCell(6, 3, 9, 6, 1),
-//    RCell(8, 5, 11, 8, 1), cell9, cell10, cell11, cell11, cell11, cell11, cell11), Vector(VCell(0, 3, 11, 13, 1)), a132)
-//  val board_t1k2 = Board(Vector(RCell(0, 6, 3, 9, 1), RCell(2, 8, 5, 11, 1), RCell(4, 10, 7, 13, 1), RCell(7, 3, 10, 6, 1),
-//    RCell(8, 5, 11, 8, 1), cell9, cell10, cell11, cell11, cell11, cell11, cell11), Vector(VCell(7, 3, 11, 8, 1), VCell(0, 6, 7, 13, 1)), a132)
-//
-//
-//  println("board_t1j: Before: Move " + RCell(6, 3, 9, 6, 1) + " right to cause virtual to v-v split")
-//  board_t1j2.print()
-//  println()
-//
-//  println("board_t1k: After: Move " + RCell(6, 3, 9, 6, 1) + " right to cause virtual to v-v split")
-//  board_t1k2.print()
-//
-//  "virtual break up merge " should {
-//    "happen for " in {
-//      board_t1j2.right(Point(7, 4)).get.edges mustEqual board_t1k2.edges
-//      board_t1j2.right(Point(7, 4)).get.rCells mustEqual board_t1k2.rCells
-//      board_t1j2.right(Point(7, 4)).get.vCells mustEqual board_t1k2.vCells
-//    }
-//  }
-//
-//  val Adj9 = Vector.fill[Vector[Int]](14)(Vector.fill[Int](14)(0))
-//
-////  Adj9(2)(3) = 1
-////  Adj9(3)(2) = 1
-////  Adj9(3)(4) = 1
-////  Adj9(4)(3) = 1
-////  Adj9(5)(6) = 1
-////  Adj9(6)(5) = 1
-//
-//  val a14 = Graph(board_t1).updateEdge(2,3,1,Adj9)
-//  val a15 = Graph(board_t1).updateEdge(3,4,1,a14)
-//  val a16 = Graph(board_t1).updateEdge(5,6,1,a15)
-//
-//
-//  val board_t4a = Board(Vector(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right.right,cell7,cell8,cell9,
-//                                   cell10,cell11,cell12,cell13,cell14),Vector(VCell(8,0,12,5,1),VCell(3,3,8,10,1)), a16)
-//
-//  val rCells_t4b = Vector(cell1,cell2,cell3.right,cell4,cell5.right,cell6.right,cell7,cell8.capture(1).asInstanceOf[RCell],cell9,cell10,cell11,cell12,cell13,cell14)
-//  val board_t4b = Board(rCells_t4b, Vector(VCell(3,0,12,12,1)), a16)
-//
-//
-//  println("board_t4b: Before: V-V Capture")
-//  board_t4a.print()
-//  println()
-//
-//  println("board_t4b: After V-V Capture")
-//  board_t4a.left(Point(9, 1)).get.print()
-//
-//  "virtual capture " should {
-//    "happen for " in {
-//      board_t4a.left(Point(9, 1)).get.edges mustEqual board_t4b.edges
-//      board_t4a.left(Point(9, 1)).get.rCells mustEqual board_t4b.rCells
-//      board_t4a.left(Point(9, 1)).get.vCells mustEqual board_t4b.vCells
-//    }
-//  }
-//
-//  val Adj10 = Vector.fill[Vector[Int]](14)(Vector.fill[Int](14)(0))
-////  Adj10(0)(2) = 1
-////  Adj10(2)(0) = 1
-////  Adj10(3)(4) = 1
-////  Adj10(4)(3) = 1
-////  Adj10(5)(6) = 1
-////  Adj10(6)(5) = 1
-////  Adj10(12)(13) = 1
-////  Adj10(13)(12) = 1
-//
-//  val a17 = Graph(board_t1).updateEdge(0,2,1,Adj10)
-//  val a18 = Graph(board_t1).updateEdge(3,4,1,a17)
-//  val a19 = Graph(board_t1).updateEdge(5,6,1,a18)
-//  val a20 = Graph(board_t1).updateEdge(12,13,1,a19)
-//
-//  val board_t5a = Board(Vector(RCell(1,0,4,3,1), RCell(0,3,3,6,2),RCell(4,2,7,5,2),RCell(7,5,10,8,2),RCell(6,6,9,9,2),RCell(0,7,3,10,2),RCell(2,9,5,12,2),
-//                        cell8,cell9,cell10,cell11,cell12,cell13.right.down,cell14), Vector(VCell(0,7,5,12,2), VCell(6,5,10,9,2), VCell(13,12,20,18,2)), a20)
-//
-//
-//  val board_t5b = Board(Vector(RCell(2,0,5,3,1), RCell(0,3,3,6,1),RCell(4,2,7,5,1),RCell(7,5,10,8,1),RCell(6,6,9,9,1),RCell(0,7,3,10,1),RCell(2,9,5,12,1),
-//                        RCell(9,9,12,12,1),cell9,cell10,cell11,cell12,cell13.right.down,cell14), Vector(VCell(0,0,12,12,1),VCell(13,12,20,18,2)), a20)
-//
-//
-//  println("board_t5a: Before: R-R V-R V-V")
-//  board_t5a.print()
-//  println()
-//
-//  println("board_t5a: After R-R V-R V-V")
-//  board_t5a.right(Point(2, 1)).get.print()
-//
-//  "R-R...... " should {
-//    "should give one VCell for team 1" in {
-//      board_t5a.right(Point(2, 1)).get.edges mustEqual board_t5b.edges
-//      board_t5a.right(Point(2, 1)).get.rCells mustEqual board_t5b.rCells
-//      board_t5a.right(Point(2, 1)).get.vCells mustEqual board_t5b.vCells
-//
-//    }
-//  }
-//
-//
-//  val Adj11 = Vector.fill[Vector[Int]](14)(Vector.fill[Int](14)(0))
-////  Adj11(3)(4) = 1
-////  Adj11(4)(3) = 1
-////  Adj11(5)(6) = 1
-////  Adj11(6)(5) = 1
-////  Adj11(12)(13) = 1
-////  Adj11(13)(12) = 1
-//
-//  val a21 = Graph(board_t1).updateEdge(3,4,1,Adj11)
-//  val a22 = Graph(board_t1).updateEdge(5,6,1,a21)
-//  val a23 = Graph(board_t1).updateEdge(12,13,1,a22)
-//
-//
-//  val board_t6a = Board(Vector(RCell(1,0,4,3,2), RCell(0,3,3,6,2),RCell(4,2,7,5,1),RCell(7,5,10,8,2),RCell(6,6,9,9,2),RCell(0,7,3,10,2),RCell(2,9,5,12,2),
-//    cell8,cell9,cell10,cell11,cell12,cell13.right.down,cell14), Vector(VCell(0,7,5,12,2), VCell(6,5,10,9,2), VCell(13,12,20,18,2)), a23)
-//
-//
-//  val board_t6b = Board(Vector(RCell(1,0,4,3,2), RCell(0,3,3,6,1),RCell(4,3,7,6,1),RCell(7,5,10,8,1),RCell(6,6,9,9,1),RCell(0,7,3,10,1),RCell(2,9,5,12,1),
-//    RCell(9,9,12,12,1),cell9,cell10,cell11,cell12,cell13.right.down,cell14), Vector(VCell(0,3,12,12,1),VCell(13,12,20,18,2)), a23)
-//
-//
-//  println("board_t6a: Before: R-V V-R V-V")
-//  board_t6a.print()
-//  println()
-//
-//  println("board_t6a: After R-V V-R V-V")
-//  board_t6a.down(Point(5, 3)).get.print()
-//
-//  "R-V......... " should {
-//    "should give one VCell for team 1" in {
-//      board_t6a.down(Point(5, 3)).get.edges mustEqual board_t6b.edges
-//      board_t6a.down(Point(5, 3)).get.rCells mustEqual board_t6b.rCells
-//      board_t6a.down(Point(5, 3)).get.vCells mustEqual board_t6b.vCells
-//
-//    }
-//  }
-//
-//  println("====================== Performance ======================")
-//  println("")
-//
-//
-//  val t1 = time{
-//    board_t1j.right(Point(7, 4))
-//  }
-//  println("Time to v-v split: " + t1)
-//
-//
-//  val t2 = time{
-//    board_t1h.left(Point(10,6))
-//  }
-//  println("Time to v-v merge: " + t2)
-//
-//
-//  val t3 = time{
-//    board_t1f.left(Point(8,1))
-//  }
-//  println("Time to v-v merge: " + t3)
-//
-//  val t4 = time{
-//    board_t1e.right(Point(3,4))
-//  }
-//  println("Time move cell:" + t4)
-//
-//  val t5 = time{
-//    board_t4.right(Point(1, 1)).get.right(Point(2,1)).get.left(Point(3,1)).get.left(Point(2, 1))
-//  }
-//  println("Time move cell 4 times:" + t5)
-//  println("")
-//  println("=========================================================")
+
+
+
+  val board_t1j = Board(Vector(RCell(0, 6, 3, 9, 1, 0).addEdge(1),
+                               RCell(2, 8, 5, 11, 1, 1).addEdges(0,2),
+                               RCell(4, 10, 7, 13, 1, 2).addEdge(1),
+                               RCell(6, 3, 9, 6, 1, 3).addEdge(4),
+                               RCell(8, 5, 11, 8, 1, 4).addEdge(3),
+                               cell9.copy(id=5), cell10.copy(id=6), cell11.copy(id=7), cell11.copy(id=8),
+                               cell11.copy(id=9), cell11.copy(id=10), cell11.copy(id=11)), Vector(VCell(0, 3, 11, 13, 1)))
+
+  val board_t1k = Board(Vector(RCell(0, 6, 3, 9, 1, 0).addEdge(1),
+                               RCell(2, 8, 5, 11, 1, 1).addEdges(0,2),
+                               RCell(4, 10, 7, 13, 1, 2).addEdge(1),
+                               RCell(6, 3, 9, 6, 1, 3).right.addEdge(4),
+                               RCell(8, 5, 11, 8, 1, 4).addEdge(3),
+                               cell9.copy(id=5), cell10.copy(id=6), cell11.copy(id=7), cell11.copy(id=8),
+                               cell11.copy(id=9), cell11.copy(id=10), cell11.copy(id=11)), Vector(VCell(0, 6, 7, 13, 1, 0),VCell(7, 3, 11, 8, 1, 3)))
+
+
+
+
+  println("board_t1j: Before: Move " + RCell(6, 3, 9, 6, 1) + " right to cause virtual to v-v split")
+  board_t1j.print()
+  println()
+
+  println("board_t1k: After: Move " + RCell(6, 3, 9, 6, 1) + " right to cause virtual to v-v split")
+  board_t1k.print()
+
+  "virtual break up merge " should {
+    "happen for " in {
+      board_t1j.right(Point(7, 4)).get.rCells mustEqual board_t1k.rCells
+      board_t1j.right(Point(7, 4)).get.vCells mustEqual board_t1k.vCells
+    }
+  }
+
+
+  val board_t4a = Board(Vector(cell1,
+                               cell2,
+                               cell3.right.addEdge(3),
+                               cell4.addEdges(2,4),
+                               cell5.right.addEdge(3),
+                               cell6.right.right.addEdge(6),
+                               cell7.addEdge(5),
+                               cell8.copy(id=7),cell9.copy(id=8),
+                               cell10.copy(id=9),cell11.copy(id=10),
+                               cell12.copy(id=11),cell13.copy(id=12),
+                               cell14.copy(id=13)),Vector(VCell(8,0,12,5,1),VCell(3,3,8,10,1)))
+
+  val board_t4b = Board(Vector(cell1,
+                                cell2,
+                                cell3.right.addEdge(3),
+                                cell4.addEdges(2,4),
+                                cell5.right.addEdge(3),
+                                cell6.right.addEdge(6),
+                                cell7.addEdge(5),
+                                cell8.copy(id=7).capture(1).asInstanceOf[RCell],cell9.copy(id=8),
+                                cell10.copy(id=9),cell11.copy(id=10),
+                                cell12.copy(id=11),cell13.copy(id=12),
+                                cell14.copy(id=13)),Vector(VCell(3,0,12,12,1,2)))
+
+
+  println("board_t4b: Before: V-V Capture")
+  board_t4a.print()
+  println()
+
+  println("board_t4b: After V-V Capture")
+  board_t4a.left(Point(9, 1)).get.print()
+
+  "virtual capture " should {
+    "happen for " in {
+      board_t4a.left(Point(9, 1)).get.rCells mustEqual board_t4b.rCells
+      board_t4a.left(Point(9, 1)).get.vCells mustEqual board_t4b.vCells
+    }
+  }
+
+//  Adj10(0)(2) = 1
+//  Adj10(2)(0) = 1
+//  Adj10(3)(4) = 1
+//  Adj10(4)(3) = 1
+//  Adj10(5)(6) = 1
+//  Adj10(6)(5) = 1
+//  Adj10(12)(13) = 1
+//  Adj10(13)(12) = 1
+
+
+  val board_t5a = Board(Vector(RCell(1,0,4,3,1,0),
+                               RCell(0,3,3,6,2,1),
+                               RCell(4,2,7,5,2,2),
+                               RCell(7,5,10,8,2,3).addEdge(4),
+                               RCell(6,6,9,9,2,4).addEdge(3),
+                               RCell(0,7,3,10,2,5).addEdge(6),
+                               RCell(2,9,5,12,2,6).addEdge(5),
+                               cell8.copy(id=7),
+                               cell9.copy(id=8),
+                               cell10.copy(id=9),
+                               cell11.copy(id=10),
+                               cell12.copy(id=11),
+                               cell13.copy(id=12).right.down.addEdge(13),
+                               cell14.copy(id=13).addEdge(12)),
+                        Vector(VCell(0,7,5,12,2), VCell(6,5,10,9,2), VCell(13,12,20,18,2)))
+
+  val board_t5b = Board(Vector(RCell(2,0,5,3,1,0).addEdge(2),
+                                RCell(0,3,3,6,1,1),
+                                RCell(4,2,7,5,1,2).addEdge(0),
+                                RCell(7,5,10,8,1,3).addEdge(4),
+                                RCell(6,6,9,9,1,4).addEdge(3),
+                                RCell(0,7,3,10,1,5).addEdge(6),
+                                RCell(2,9,5,12,1,6).addEdge(5),
+                                cell8.copy(id=7, marker = 1),
+                                cell9.copy(id=8),
+                                cell10.copy(id=9),
+                                cell11.copy(id=10),
+                                cell12.copy(id=11),
+                                cell13.copy(id=12).right.down.addEdge(13),
+                                cell14.copy(id=13).addEdge(12)),
+                          Vector(VCell(0,0,12,12,1,0),VCell(13,12,20,18,2,12)))
+
+  board_t5b.rCells.foreach(p => println(p, p.edges))
+  board_t5a.right(Point(2, 1)).get.rCells.foreach(p => println(p, p.edges))
+
+  println("board_t5a: Before: R-R V-R V-V")
+  board_t5a.print()
+  println()
+
+  println("board_t5a: After R-R V-R V-V")
+  board_t5a.right(Point(2, 1)).get.print()
+
+  "R-R...... " should {
+    "should give one VCell for team 1" in {
+      board_t5a.right(Point(2, 1)).get.rCells mustEqual board_t5b.rCells
+      board_t5a.right(Point(2, 1)).get.vCells mustEqual board_t5b.vCells
+
+    }
+  }
+
+
+//  Adj11(3)(4) = 1
+//  Adj11(4)(3) = 1
+//  Adj11(5)(6) = 1
+//  Adj11(6)(5) = 1
+//  Adj11(12)(13) = 1
+//  Adj11(13)(12) = 1
+
+
+  val board_t6a = Board(Vector(RCell(1,0,4,3,2,0),
+                               RCell(0,3,3,6,2,1),
+                               RCell(4,2,7,5,1,2),
+                               RCell(7,5,10,8,2,3).addEdge(4),
+                               RCell(6,6,9,9,2,4).addEdge(3),
+                               RCell(0,7,3,10,2,5).addEdge(6),
+                               RCell(2,9,5,12,2,6).addEdge(5),
+                               cell8.copy(id=7),
+                               cell9.copy(id=8),
+                               cell10.copy(id=9),
+                               cell11.copy(id=10),
+                               cell12.copy(id=11),
+                               cell13.copy(id=12).right.down.addEdge(13),
+                               cell14.copy(id=13).addEdge(12)),
+                               Vector(VCell(0,7,5,12,2), VCell(6,5,10,9,2), VCell(13,12,20,18,2)))
+
+
+  val board_t6b = Board(Vector(RCell(1,0,4,3,2,0),
+                               RCell(0,3,3,6,1,1),
+                               RCell(4,2,7,5,1,2).down,
+                               RCell(7,5,10,8,1,3).addEdge(4),
+                               RCell(6,6,9,9,1,4).addEdge(3),
+                               RCell(0,7,3,10,1,5).addEdge(6),
+                               RCell(2,9,5,12,1,6).addEdge(5),
+                               RCell(9,9,12,12,1,7),
+                               cell9.copy(id=8),
+                               cell10.copy(id=9),
+                               cell11.copy(id=10),
+                               cell12.copy(id=11),
+                               cell13.copy(id=12).right.down.addEdge(13),
+                               cell14.copy(id=13).addEdge(12)),
+                               Vector(VCell(0,3,12,12,1,3),VCell(13,12,20,18,2,12)))
+
+
+  println("board_t6a: Before: R-V V-R V-V")
+  board_t6a.print()
+  println()
+
+  println("board_t6a: After R-V V-R V-V")
+  board_t6a.down(Point(5, 3)).get.print()
+
+  "R-V......... " should {
+    "should give one VCell for team 1" in {
+      board_t6a.down(Point(5, 3)).get.rCells mustEqual board_t6b.rCells
+      board_t6a.down(Point(5, 3)).get.vCells mustEqual board_t6b.vCells
+
+    }
+  }
+
+  println("====================== Performance ======================")
+  println("")
+
+
+  val t1 = time{
+    board_t1j.right(Point(7, 4))
+  }
+  println("Time to v-v split: " + t1)
+
+
+  val t2 = time{
+    board_t1h.left(Point(10,6))
+  }
+  println("Time to v-v merge: " + t2)
+
+
+  val t3 = time{
+    board_t1f.left(Point(8,1))
+  }
+  println("Time to v-v merge: " + t3)
+
+  val t4 = time{
+    board_t1e.right(Point(3,4))
+  }
+  println("Time move cell:" + t4)
+
+  val t5 = time{
+    board_t4.right(Point(1, 1)).get.right(Point(2,1)).get.left(Point(3,1)).get.left(Point(2, 1))
+  }
+  println("Time move cell 4 times:" + t5)
+  println("")
+  println("=========================================================")
 }

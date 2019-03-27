@@ -103,7 +103,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell]) {
         else if (!(mover contains next) && !(acc contains next)) { acc ++ Vector(next) }
         else {
           val updated = acc.updated(0, acc(0).copy(edges = acc(0).edges :+ next.id))
-          updated ++ Vector(next.addEdge(mover))
+          updated ++ Vector(next.addEdge(mover_idx))
         }
       }
     vector.updated(mover_idx + 1, vector(0)).tail
@@ -123,7 +123,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell]) {
       (for( i <- rCellsPreMove.indices;
          temp =
          if ((rCellsPreMove(i) contains rCellsPreMove(mover_idx)) && (i != mover_idx)) {
-           rCellsMoved(i).delEdge(rCellsPreMove(mover_idx))
+           rCellsMoved(i).delEdge(mover_idx)
          }else{
            rCellsMoved(i)
          }
@@ -206,6 +206,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell]) {
     * @param mover_idx index of cell to be moved in [[Board.rCells]]
     * @return List of new Virtual Cells
     */
+  @annotation.tailrec
   private def rec(connected: Vector[Cell],
                   free: Vector[RCell],
                   rCellsMovedWithEdges:  Vector[RCell],
@@ -250,6 +251,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell]) {
     * @param vc the VCells to be checked for self-merges
     * @return list of self merged VCells
     */
+  @annotation.tailrec
   private def recMergeVirtualCells(vc: Vector[Cell]): Vector[Cell] = {
 
     val vcc = new ListBuffer[Cell]()
@@ -274,6 +276,7 @@ case class Board(rCells: Vector[RCell], vCells: Vector[Cell]) {
     * @param oc list of outer Cells (incl. vCells & vCells)
     * @return list of vCells
     */
+  @annotation.tailrec
   private def recMergeVirtualAndReal(mCell: RCell, vc: Vector[Cell], oc: Vector[Cell]): Vector[Cell] = {
 
     val occ = new ListBuffer[Cell]()
